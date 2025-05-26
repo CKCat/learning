@@ -165,28 +165,6 @@ emulate arm64 code done.
 
 ## 数据类型
 
-[uc_arch](#uc_arch)
-
-[uc_mode](#uc_mode)
-
-[uc_err](#uc_err)
-
-[uc_mem_type](#uc_mem_type)
-
-[uc_hook_type](#uc_hook_type)
-
-[Hook Types](#hook_types)
-
-[uc_mem_region](#uc_mem_region)
-
-[uc_query_type](#uc_query_type)
-
-[uc_control_type](#uc_control_type)
-
-[uc_context](#uc_context)
-
-[uc_prot](#uc_prot)
-
 ---
 
 ### uc_arch
@@ -383,6 +361,141 @@ typedef enum uc_hook_type {
 #define UC_HOOK_MEM_VALID (UC_HOOK_MEM_READ + UC_HOOK_MEM_WRITE + UC_HOOK_MEM_FETCH)
 ```
 
+### hook callback
+
+```cpp
+/*
+  用于跟踪代码 (UC_HOOK_CODE 和 UC_HOOK_BLOCK) 的回调函数
+
+  @address: 正在执行代码的地址
+  @size: 正在执行的机器指令的大小，如果大小未知则为 0
+  @user_data: 传递给跟踪 API 的用户数据。
+*/
+typedef void (*uc_cb_hookcode_t)(uc_engine *uc, uint64_t address, uint32_t size,
+                                 void *user_data);
+
+/*
+  用于跟踪中断 (uc_hook_intr() 使用) 的回调函数
+
+  @intno: 中断号
+  @user_data: 传递给跟踪 API 的用户数据。
+*/
+typedef void (*uc_cb_hookintr_t)(uc_engine *uc, uint32_t intno,
+                                 void *user_data);
+
+/*
+  用于跟踪无效指令的回调函数
+
+  @user_data: 传递给跟踪 API 的用户数据。
+
+  @return: 返回 true 以继续执行，或返回 false 以停止程序 (由于无效指令)。
+*/
+typedef bool (*uc_cb_hookinsn_invalid_t)(uc_engine *uc, void *user_data);
+
+/*
+  用于跟踪 X86 IN 指令的回调函数
+
+  @port: 端口号
+  @size: 要从此端口读取的数据大小 (1/2/4字节)
+  @user_data: 传递给跟踪 API 的用户数据。
+*/
+typedef uint32_t (*uc_cb_insn_in_t)(uc_engine *uc, uint32_t port, int size,
+                                    void *user_data);
+
+/*
+  用于跟踪 X86 OUT 指令的回调函数
+
+  @port: 端口号
+  @size: 要写入此端口的数据大小 (1/2/4字节)
+  @value: 要写入此端口的数据值
+  @user_data: 传递给跟踪 API 的用户数据。
+*/
+typedef void (*uc_cb_insn_out_t)(uc_engine *uc, uint32_t port, int size,
+                                 uint32_t value, void *user_data);
+
+/*
+  用于翻译块之间新边的回调函数。
+
+  @cur_tb: 将要生成的当前翻译块。
+  @prev_tb: 前一个翻译块。
+  @user_data: 传递给跟踪 API 的用户数据。
+*/
+typedef void (*uc_hook_edge_gen_t)(uc_engine *uc, uc_tb *cur_tb, uc_tb *prev_tb,
+                                   void *user_data);
+
+/*
+  用于处理两个参数的 tcg 操作码的回调函数。
+
+  @address: 当前程序计数器。
+  @arg1: 第一个参数。
+  @arg2: 第二个参数。
+  @size: 操作数大小。
+  @user_data: 传递给跟踪 API 的用户数据。
+*/
+typedef void (*uc_hook_tcg_op_2)(uc_engine *uc, uint64_t address, uint64_t arg1,
+                                 uint64_t arg2, uint32_t size, void *user_data);
+
+
+/*
+  MMIO 读操作的回调函数
+
+  @offset: 相对于 IO 内存基地址的偏移量。
+  @size: 要读取的数据大小
+  @user_data: 传递给 uc_mmio_map() 的用户数据
+*/
+typedef uint64_t (*uc_cb_mmio_read_t)(uc_engine *uc, uint64_t offset,
+                                      unsigned size, void *user_data);
+
+/*
+  MMIO 写操作的回调函数
+
+  @offset: 相对于 IO 内存基地址的偏移量。
+  @size: 要写入的数据大小
+  @value: 要写入的数据值
+  @user_data: 传递给 uc_mmio_map() 的用户数据
+*/
+typedef void (*uc_cb_mmio_write_t)(uc_engine *uc, uint64_t offset,
+                                   unsigned size, uint64_t value,
+                                   void *user_data);
+
+/*
+  用于钩取内存 (读、写和取指) 的回调函数
+
+  @type: 表示内存正在被读取、写入或取指
+  @address: 正在执行代码的地址
+  @size: 正在读取或写入的数据大小
+  @value: 正在写入内存的数据值，如果 type = READ 则此参数无关紧要。
+  @user_data: 传递给跟踪 API 的用户数据
+*/
+typedef void (*uc_cb_hookmem_t)(uc_engine *uc, uc_mem_type type,
+                                uint64_t address, int size, int64_t value,
+                                void *user_data);
+/*
+  用于处理无效内存访问事件 (UNMAPPED 和 PROT 事件) 的回调函数
+
+  @type: 表示内存正在被读取、写入或取指
+  @address: 正在执行代码的地址
+  @size: 正在读取或写入的数据大小
+  @value: 正在写入内存的数据值，如果 type = READ 则此参数无关紧要。
+  @user_data: 传递给跟踪 API 的用户数据
+
+  @return: 返回 true 以继续执行，或返回 false 以停止程序 (由于无效内存)。
+           注意：只有在钩子执行期间，通过正确的权限使被访问的内存变得可访问，
+           返回 true 以继续执行才会生效。
+
+           在发生 UC_MEM_READ_UNMAPPED 或 UC_MEM_WRITE_UNMAPPED 回调时，
+           应使用 uc_mem_map() 以正确的权限映射内存，
+           然后指令将按预期读取或写入该地址。
+
+           在发生 UC_MEM_FETCH_UNMAPPED 回调时，可以将内存映射为可执行，
+           在这种情况下，执行将从取指的地址恢复。可以写入指令指针以更改
+           执行恢复的位置，但如果要恢复执行，则取指必须成功。
+*/
+typedef bool (*uc_cb_eventmem_t)(uc_engine *uc, uc_mem_type type,
+                                 uint64_t address, int size, int64_t value,
+                                 void *user_data);
+```
+
 ### uc_mem_region
 
 由 [uc_mem_map()](#uc_mem_map) 函数和[uc_mem_map_ptr()](#uc_mem_map_ptr) 函数映射内存区域。
@@ -520,62 +633,6 @@ typedef enum uc_prot {
 ```
 
 ## API
-
-[uc_version](#uc_version)
-
-[uc_arch_supported](#uc_arch_supported)
-
-[uc_open](#uc_open)
-
-[uc_close](#uc_close)
-
-[uc_query](#uc_query)
-
-[uc_errno](#uc_errno)
-
-[uc_strerror](#uc_strerror)
-
-[uc_reg_write](#uc_reg_write)
-
-[uc_reg_read](#uc_reg_read)
-
-[uc_reg_write_batch](#uc_reg_write_batch)
-
-[uc_reg_read_batch](#uc_reg_read_batch)
-
-[uc_mem_write](#uc_mem_write)
-
-[uc_mem_read](#uc_mem_read)
-
-[uc_emu_start](#uc_emu_start)
-
-[uc_emu_stop](#uc_emu_stop)
-
-[uc_hook_add](#uc_hook_add)
-
-[uc_hook_del](#uc_hook_del)
-
-[uc_mem_map](#uc_mem_map)
-
-[uc_mem_map_ptr](#uc_mem_map_ptr)
-
-[uc_mem_unmap](#uc_mem_unmap)
-
-[uc_mem_protect](#uc_mem_protect)
-
-[uc_mem_regions](#uc_mem_regions)
-
-[uc_free](#uc_free)
-
-[uc_context_alloc](#uc_context_alloc)
-
-[uc_context_save](#uc_context_save)
-
-[uc_context_restore](#uc_context_restore)
-
-[uc_context_size](#uc_context_size)
-
-[uc_context_free](#uc_context_free)
 
 ---
 
