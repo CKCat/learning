@@ -833,7 +833,7 @@ def test_arm64_jni():
     emu.reg_write(unicorn.arm64_const.UC_ARM64_REG_X1, 0)
     emu.mem_write(jnienv_pointer + 8, b"hello")
     emu.reg_write(unicorn.arm64_const.UC_ARM64_REG_X2, jnienv_pointer + 8)
-    # 将 .__android_log_print patch 为 ret 
+    # 将 .__android_log_print patch 为 ret
     emu.mem_write(ADDRESS+0xE1C, b"\xC0\x03\x5F\xD6")
     SP = ADDRESS + SIZE - 1024
     emu.reg_write(unicorn.arm64_const.UC_ARM64_REG_SP, SP)
@@ -895,6 +895,428 @@ if __name__ == '__main__':
     test_arm64_jni_onload()
     print("Jni_Onload emulate DONE!")
 ```
+
 上面的代码就模拟了 jni 函数和 jni_onload 函数的调用。
 
-## 
+## ExAndroidNativeEmu 使用
+
+ExAndroidNativeEmu 支持 arm64 的模拟执行，但是目前还是有很多的 Bug，下面开始简单的介绍如何模拟 jni_onload 函数以及 JNI 函数。
+
+1. 首先定义一个 Java 类，使用自定义元类来定义 Java 类的行为，并且定义这个类在 JVM 中的完整名称。
+
+```python
+class MainActivity(
+    metaclass=JavaClassDef, jvm_name="org/ckcat/uniron/MainActivity"
+):
+    def __init__(self):
+        pass
+
+    @java_method_def(
+        name="sayHello", #  JNI 方法名称
+        signature="(Ljava/lang/String;)Ljava/lang/String;", # JNI 方法签名
+        native=True, # True 表示这是一个 Native 方法
+    )
+    def sayHello(self, mu, content):
+        pass
+```
+
+2. 然后定义一个 emulator 对象，并注册这个类到 java_classloader 中。
+
+```python
+    # 初始化emulator
+    emulator = Emulator(
+        vfs_root=posixpath.join(posixpath.dirname(__file__), "vfs"),
+        arch=emu_const.ARCH_ARM64,
+    )
+
+    logger.info("Loaded vfs.")
+    # 注册 MainActivity 类
+    emulator.java_classloader.add_class(MainActivity)
+
+    logger.info("Register native methods.")
+    # Load all libraries.
+    lib_module = emulator.load_library("tests/bin64/libuniron.so")
+```
+
+3. 直接调用 jni_onload 函数和 jni 函数。
+
+```python
+    # 调用 JNI_OnLoad
+    emulator.call_symbol(
+        lib_module, "JNI_OnLoad", emulator.java_vm.address_ptr, 0x00
+    )
+    # 使用 MainActivity 对象调用 jni 函数
+    main_activity = MainActivity()
+    retult = main_activity.sayHello(
+        emulator,
+        "Hello ExAndroidNativeEmu",
+    )
+    logger.info(f"resutl: {retult}")
+    # 直接使用 call_native 来调用 jni 函数
+    retult = emulator.call_native(
+        lib_module.base + 0xACC,
+        emulator.java_vm.jni_env.address_ptr,
+        0x00,
+        "Hello ExAndroidNativeEmu",
+    )
+    retult = emulator.java_vm.jni_env.get_local_reference(retult)
+    logger.info(f"resutl: {retult.value}")
+```
+
+这样就可以完成 JNI_OnLoad 和 JNI 函数的调用了。
+
+当遇到一些系统库函数调用并未实现时，可以使用下面方式实现, 例如 strlen 函数：
+
+```python
+@native_method
+def strlen(uc buffer):
+    content=memory_helpers.read_utf8(uc,buffer)
+    Length=len(content)
+
+emulator.modules.add_symbol_hook('strlen', emulator.hooker.write_function(strlen) + 1)
+```
+
+这样就可以实现模拟 strlen 函数。
+
+### jni 与 java 的交互
+
+主要的不同点就是设置 `native=False`，并且参数修改为 `*args` 和 `**argv`。
+
+```python
+class MainActivity(
+    metaclass=JavaClassDef, jvm_name="org/ckcat/uniron/MainActivity"
+):
+    def __init__(self):
+        pass
+
+    @java_method_def(
+        name="sayHello",
+        signature="(Ljava/lang/String;)Ljava/lang/String;",
+        native=True,
+    )
+    def sayHello(self, mu, content):
+        pass
+
+class Encrypt(
+    metaclass=JavaClassDef, jvm_name="org/ckcat/uniron/Encrypt"
+):
+    def __init__(self):
+        pass
+
+    @java_method_def(
+        name="base64",
+        signature="(Ljava/lang/String;)Ljava/lang/String;",
+        native=False,
+        args_list=['jstring']
+    )
+    def base64(self, *args, **argv):
+        print(f"{args} {argv}")
+        # content = base64.b64encode(args[0].value)
+        return "hello base64"
+
+if __name__ == "__main__":
+    # 初始化emulator
+    emulator = Emulator(
+        vfs_root=posixpath.join(posixpath.dirname(__file__), "vfs"),
+        arch=emu_const.ARCH_ARM64,
+    )
+
+    logger.debug("Loaded vfs.")
+    # 注册 MainActivity 类
+    emulator.java_classloader.add_class(MainActivity)
+    emulator.java_classloader.add_class(Encrypt)
+    emulator.mu.hook_add(UC_HOOK_CODE, hook_code, emulator)
+
+    emulator.mu.hook_add(UC_HOOK_MEM_WRITE, hook_mem_write)
+    emulator.mu.hook_add(UC_HOOK_MEM_READ, hook_mem_read)
+
+    logger.info("Register native methods.")
+    # Load all libraries.
+    lib_module = emulator.load_library("libuniron.so")
+
+    # androidemu.utils.debug_utils.dump_symbols(emulator, sys.stdout)
+
+    # Show loaded modules.
+    logger.info("Loaded modules:")
+
+    for module in emulator.modules:
+        logger.info("=> 0x%08x - %s" % (module.base, module.filename))
+
+    try:
+        # Run JNI_OnLoad.
+        # JNI_OnLoad will call 'RegisterNatives'.
+        emulator.call_symbol(
+            lib_module, "JNI_OnLoad", emulator.java_vm.address_ptr, 0x00
+        )
+        main_activity = MainActivity()
+        retult = main_activity.sayHello(
+            emulator,
+            "Hello ExAndroidNativeEmu",
+        )
+        logger.info(f"resutl: {retult}")
+        # retult = emulator.call_native(
+        #     lib_module.base + 0xACC,
+        #     emulator.java_vm.jni_env.address_ptr,
+        #     0x00,
+        #     "Hello ExAndroidNativeEmu",
+        # )
+        # retult = emulator.java_vm.jni_env.get_local_reference(retult)
+        # logger.info(f"resutl: {retult.value}")
+
+        # Dump natives found.
+        logger.info("Exited EMU.")
+        logger.info("Native methods registered to MainActivity:")
+
+    except UcError:
+        print("Exit at %x" % emulator.mu.reg_read(UC_ARM_REG_PC))
+        raise
+```
+
+目前代码还存在 bug，后续如果修复了在更新。
+
+## unidbg 使用
+
+unidbg 是一个开源的、基于 Unicorn 引擎的动态二进制翻译和模拟框架，主要用于模拟运行 Android 和 iOS 的二进制代码。它广泛应用于逆向工程、漏洞分析、动态调试和移动应用安全研究。unidbg 支持 ARM、ARM64、x86 等架构，能够在非原生环境下（如 PC）模拟执行 Android 的 Dalvik 字节码或 iOS 的 Mach-O 二进制文件。
+
+主要功能：
+
+- 指令模拟：通过 Unicorn/dynarmic 引擎模拟 ARM/ARM64 指令，运行 native 代码。
+- JNI 模拟：支持 Java 和 native 代码之间的交互，模拟 JNI 调用。
+- Hook 功能：
+  - 支持 inline Hook（直接修改指令）和符号 Hook（基于函数名）。
+  - 提供 Java 层 Hook，类似 Frida 的 Java 脚本功能。
+  - 内存管理：模拟 Android 的内存分配机制，支持动态分配和操作内存。
+- 文件系统模拟：模拟 Android 的文件系统操作，如读取 assets 或资源文件。
+
+unidbg 基本使用步骤：
+
+1. 使用 AndroidEmulatorBuilder 创建 AnroidEmulator 对象。
+2. 通过 Memory 对象设置 AndroidResolver 对象，实现依赖库的加载。
+3. 通过 createDalvikVM 创建 VM 对象，如果需要调用 JNI 函数，则需要使用 setJni 设置 jni 对象，前提是需要继承 AbstractJni 类。
+4. 通过 VM 对象调用 loadLibrary 方法加载需要模拟的动态库，返回 DalvikModule 对象。
+5. 通过 DalvikModule 对象调用 callFunction 实现普通 native 函数调用。
+6. 通过 VM 对象调用 resolveClass 注册需要模拟的 Java 类，接下来就可以调用静态注册的 JNI 函数。
+7. 通过 DalvikModule 对象调用 callJNI_OnLoad 函数，实现动态注册的 jni 函数完成地址绑定。
+8. 通过步骤 6 调用 JNI 函数，并根据异常信息补环境。
+
+unidbg 示例代码：
+
+```java
+package org.ckcat.uniron;
+
+import com.github.unidbg.AndroidEmulator;
+import com.github.unidbg.PointerNumber;
+import com.github.unidbg.linux.android.AndroidEmulatorBuilder;
+import com.github.unidbg.linux.android.AndroidResolver;
+import com.github.unidbg.linux.android.dvm.*;
+import com.github.unidbg.memory.Memory;
+import com.github.unidbg.memory.MemoryBlock;
+import com.github.unidbg.pointer.UnidbgPointer;
+import org.apache.commons.codec.binary.Base64;
+import unicorn.Arm64Const;
+
+import java.io.File;
+import java.net.URL;
+
+public class Main extends AbstractJni {
+
+
+    public static void main(String[] args) {
+        URL resourceUrl = Main.class.getClassLoader().getResource("libuniron.so");
+        if (resourceUrl == null) {
+            return;
+        }
+        String filePath = resourceUrl.getFile();
+        System.out.println("文件路径: " + filePath);
+        // 1. 创建 emulator
+        AndroidEmulator emulator = AndroidEmulatorBuilder.for64Bit()
+                .setProcessName("org.ckcat.uniron")
+                .build();
+        // 2. 设置依赖库
+        Memory memory = emulator.getMemory();
+        memory.setLibraryResolver(new AndroidResolver(23));
+        // 3. 创建vm
+        VM vm = emulator.createDalvikVM();
+        vm.setVerbose(true); // 输出日志
+        // 4. 加载 so, 这里会自动调用 .init_proc 和 init_array 里面的函数。
+        DalvikModule dm = vm.loadLibrary(new File(filePath), false);
+        // 5. 调用普通函数
+        // 通过偏移调用函数
+        Number result= dm.getModule().callFunction(emulator,  0xED0, 11,22);
+        System.out.println(result.intValue());
+        // 写入字符串参数
+        MemoryBlock block = memory.malloc(10, false);
+        UnidbgPointer pointer = block.getPointer();
+        pointer.write("flag".getBytes());
+
+        result= dm.getModule().callFunction(emulator,  0xEF0, new PointerNumber(pointer),1, 2, 3, 4, 5, 6,7,8,9,10);
+        Number x0 = emulator.getBackend().reg_read(Arm64Const.UC_ARM64_REG_X0);
+        System.out.println(result.intValue() + " --- " + x0);
+
+        // 6. 调用JNI函数
+        System.out.println("================start callStaticJniMethodObject sayWorld================================");
+        DvmClass main_activity = vm.resolveClass("org/ckcat/uniron/MainActivity");
+        DvmObject<?> resultObj = main_activity.callStaticJniMethodObject(emulator, "sayWorld(Ljava/lang/String;)Ljava/lang/String;",
+                new StringObject(vm, "Say World!!!"));
+        System.out.println(resultObj.toString());
+        System.out.println("================end callStaticJniMethodObject sayWorld================================");
+        // 7. 调用 JNI_OnLoad 函数
+        dm.callJNI_OnLoad(emulator);
+        // 对于动态注册的jni函数必须在完成地址的绑定才能调用
+        Main main = new Main();
+        vm.setJni(main);
+        System.out.println("================start callStaticJniMethodObject sayHello================================");
+        resultObj = main_activity.callStaticJniMethodObject(emulator, "sayHello(Ljava/lang/String;)Ljava/lang/String;",
+                new StringObject(vm, "Say Hello!!!"));
+        System.out.println(resultObj.toString());
+        System.out.println("================end callStaticJniMethodObject sayHello================================");
+
+        System.out.println("================start callJniMethodObject base64byjni================================");
+        DvmObject<?> main_activityobj = main_activity.newObject(emulator);
+        resultObj = main_activityobj.callJniMethodObject(emulator, "base64byjni(Ljava/lang/String;)Ljava/lang/String;", "base46jni_call");
+        System.out.println(resultObj.toString());
+        System.out.println("================end callJniMethodObject base64byjni================================");
+
+    }
+    public String base64(String content) {
+        return Base64.encodeBase64String(content.getBytes());
+    }
+    @Override
+    public DvmObject<?> callStaticObjectMethodV(BaseVM vm, DvmClass dvmClass, DvmMethod dvmMethod, VaList vaList) {
+        System.out.println("callStaticObjectMethodV");
+        System.out.println(dvmClass.toString());
+        System.out.println(dvmMethod.toString());
+        String signature = dvmMethod.getSignature();
+        if(signature.equals("org/ckcat/uniron/Encrypt->base64(Ljava/lang/String;)Ljava/lang/String;")){
+            DvmObject<?> dvmobj=vaList.getObjectArg(0);
+            String arg= (String) dvmobj.getValue();
+            String result=base64(arg);
+            return new StringObject(vm,result);
+        }
+        return super.callStaticObjectMethodV(vm, dvmClass, dvmMethod, vaList);
+    }
+    @Override
+    public DvmObject<?> getStaticObjectField(BaseVM vm, DvmClass dvmClass, String signature) {
+        if (signature.equals("org/ckcat/uniron/MainActivity->staticcontent:Ljava/lang/String;")) {
+            return new StringObject(vm, "CKCat-staticObject");
+        }
+        return super.getStaticObjectField(vm, dvmClass, signature);
+    }
+
+    @Override
+    public DvmObject<?> getObjectField(BaseVM vm, DvmObject<?> dvmObject, String signature) {
+        if (signature.equals("org/ckcat/uniron/MainActivity->objcontent:Ljava/lang/String;")) {
+            return new StringObject(vm, "CKCat-Object");
+        }
+        return super.getObjectField(vm, dvmObject, signature);
+    }
+
+//    @Override
+//    public DvmObject<?> callObjectMethodV(BaseVM vm, DvmObject<?> dvmObject, String signature, VaList vaList) {
+//        if(signature.equals("org/ckcat/uniron/MainActivity->base64(Ljava/lang/String;)Ljava/lang/String;")){
+//            DvmObject<?> dvmobj=vaList.getObjectArg(0);
+//            String arg= (String) dvmobj.getValue();
+//            String result=base64(arg);
+//            return new StringObject(vm,result);
+//        }
+//        return super.callObjectMethodV(vm, dvmObject, signature, vaList);
+//    }
+}
+```
+
+上面代码注释掉了 `callObjectMethodV` 方法，运行后就会出现下面异常信息：
+
+```bash
+java.lang.UnsupportedOperationException: org/ckcat/uniron/MainActivity->base64(Ljava/lang/String;)Ljava/lang/String;
+	at com.github.unidbg.linux.android.dvm.AbstractJni.callObjectMethodV(AbstractJni.java:417)
+	at com.github.unidbg.linux.android.dvm.AbstractJni.callObjectMethodV(AbstractJni.java:262)
+	at com.github.unidbg.linux.android.dvm.DvmMethod.callObjectMethodV(DvmMethod.java:89)
+	at com.github.unidbg.linux.android.dvm.DalvikVM64$32.handle(DalvikVM64.java:559)
+	at com.github.unidbg.linux.ARM64SyscallHandler.hook(ARM64SyscallHandler.java:119)
+	at com.github.unidbg.arm.backend.UnicornBackend$11.hook(UnicornBackend.java:345)
+	at unicorn.Unicorn$NewHook.onInterrupt(Unicorn.java:128)
+	at unicorn.Unicorn.emu_start(Native Method)
+```
+
+这里就可以通过 `AbstractJni.callObjectMethodV` 和 `org/ckcat/uniron/MainActivity->base64(Ljava/lang/String;)Ljava/lang/String;` 信息来实现 callObjectMethodV 方法的调用。
+
+还有另一种不环境的方式，首先创建包名和类名与需要模拟执行的 JNI 函数的类名一致，然后创建方法名和参数一致的函数，最后调用即可。关键就是要使用 setDvmClassFactory 代理类工厂，然后使用 ProxyDvmObject 创建代理对象。相应的代码如下：
+
+```java
+package org.ckcat.uniron;
+
+import com.github.unidbg.AndroidEmulator;
+import com.github.unidbg.linux.android.AndroidEmulatorBuilder;
+import com.github.unidbg.linux.android.AndroidResolver;
+import com.github.unidbg.linux.android.dvm.DalvikModule;
+import com.github.unidbg.linux.android.dvm.DvmClass;
+import com.github.unidbg.linux.android.dvm.DvmObject;
+import com.github.unidbg.linux.android.dvm.VM;
+import com.github.unidbg.linux.android.dvm.jni.ProxyClassFactory;
+import com.github.unidbg.linux.android.dvm.jni.ProxyDvmObject;
+import com.github.unidbg.memory.Memory;
+
+import java.io.File;
+import java.net.URL;
+import java.util.Base64;
+
+public class MainActivity {
+    public String objcontent = "objcontent";
+    public static String staticcontent = "staticcontent";
+
+    public String base64(String content){
+        return Base64.getEncoder().encodeToString(content.getBytes());
+    }
+    public static void main(String[] args) {
+        URL resourceUrl = Main.class.getClassLoader().getResource("libuniron.so");
+        if (resourceUrl == null) {
+            return;
+        }
+        String filePath = resourceUrl.getFile();
+        System.out.println("文件路径: " + filePath);
+        // 1. 创建 emulator
+        AndroidEmulator emulator = AndroidEmulatorBuilder.for64Bit()
+                .setProcessName("org.ckcat.uniron")
+                .build();
+        // 2. 设置依赖库
+        Memory memory = emulator.getMemory();
+        memory.setLibraryResolver(new AndroidResolver(23));
+        // 3. 创建vm
+        VM vm = emulator.createDalvikVM();
+        vm.setVerbose(true); // 输出日志
+        // 使用代理方式来处理所有 Java 类的加载
+        vm.setDvmClassFactory(new ProxyClassFactory());
+        DalvikModule dm = vm.loadLibrary(new File(filePath),true);
+        dm.callJNI_OnLoad(emulator);
+        MainActivity mainActivity = new MainActivity();
+        // 创建一个适配于 Unidbg 环境的代理对象，用于模拟 Android 中的 DvmObject 行为，Unidbg 在执行 JNI 调用时，
+        // 会通过反射机制动态解析并绑定 Java 对象中的字段（如 objcontent、staticcontent）和方法（如 base64），实现对 Dalvik VM 的模拟
+        DvmObject<?> obj = ProxyDvmObject.createObject(vm, mainActivity);
+        obj.callJniMethodObject(emulator, "base64byjni(Ljava/lang/String;)Ljava/lang/String;","callbase64byjni");
+
+    }
+}
+```
+
+这样就可以成功调用到 base64byjni 方法了。
+
+### trace
+
+traceCode() 直接 trace 所有的代码。
+traceRead() 内存访问 trace
+traceWrite() 内存写入 trace
+
+调试
+if(m.name.equals("libnative-lib.so")){
+emulator.attach(DebuggerType.CONSOLE).debug();
+
+RegisterNative 注册 JNI 函数
+
+linkCode 
+
+控制流混淆
+
+sark 库 https://github.com/tmr232/Sark
+
+
+
