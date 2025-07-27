@@ -219,10 +219,10 @@ valid address
 64 位二进制文件上的 BADADDR 示例：
 
 ```python
-Python>idc.BADADDR
+Python> idc.BADADDR
 18446744073709551615
 
-Python>print("0x%x" % idaapi.BADADDR)
+Python> print("0x%x" % idaapi.BADADDR)
 0xffffffffffffffff
 ```
 
@@ -252,7 +252,7 @@ Python>
 现在我们知道如何遍历所有段，我们应该讨论如何遍历所有已知函数。
 
 ```python
-Python> for func in idautils.Functions():
+Python> for func in idautils.Functions():\
   print("0x%x, %s" % (func, idc.get_func_name(func)))
 
 Python>
@@ -290,15 +290,7 @@ Start: 0x45c7c3, End: 0x45c7cd
 
 ```python
 Python> dir(func)
-['__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__',
-'__getattribute__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__le__', '__lt__',
-'__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__',
-'__sizeof__', '__str__', '__subclasshook__', '__weakref__', '_print', 'analyzed_sp', 'argsize',
-'clear', 'color', 'compare', 'contains', 'does_return', 'empty', 'endEA', 'end_ea', 'extend',
-'flags', 'fpd', 'frame', 'frregs', 'frsize', 'get_points', 'get_regvars', 'get_tails', 'init',
-'intersect', 'is_far', 'llabelqty', 'llabels', 'need_prolog_analysis', 'overlaps', 'owner',
-'pntqty', 'points', 'referers', 'refqty', 'regargqty', 'regargs', 'regvarqty', 'regvars', 'size',
-'startEA', 'start_ea', 'tailqty', 'tails', 'this', 'thisown']
+['__annotations__', '__class__', '__delattr__', '__dict__', '__dir__', '__doc__', '__eq__', '__format__', '__ge__', '__get_points__', '__get_referers__', '__get_regargs__', '__get_regvars__', '__get_tails__', '__getattribute__', '__getstate__', '__gt__', '__hash__', '__init__', '__init_subclass__', '__iter__', '__le__', '__lt__', '__module__', '__ne__', '__new__', '__reduce__', '__reduce_ex__', '__repr__', '__setattr__', '__sizeof__', '__str__', '__subclasshook__', '__swig_destroy__', '__weakref__', '_print', 'addresses', 'analyzed_sp', 'argsize', 'clear', 'code_items', 'color', 'compare', 'contains', 'data_items', 'does_return', 'empty', 'end_ea', 'extend', 'flags', 'fpd', 'frame', 'frame_object', 'frregs', 'frsize', 'get_frame_object', 'get_name', 'get_prototype', 'head_items', 'intersect', 'is_far', 'name', 'need_prolog_analysis', 'not_tails', 'overlaps', 'owner', 'pntqty', 'points', 'prototype', 'referers', 'refqty', 'regargqty', 'regargs', 'regvarqty', 'regvars', 'size', 'start_ea', 'tailqty', 'tails', 'this', 'thisown']
 ```
 
 从输出中，我们可以看到函数的 `start_ea` 和 `end_ea`。这些用于访问函数的起始和结束位置。结束地址不是最后一条指令中的最后一个地址，而是指令后的一个字节。这些属性仅适用于当前函数。如果我们想访问周围的函数，我们可以使用 `idc.get_next_func(ea)` 和 `idc.get_prev_func(ea)`。`ea` 的值只需要是分析函数边界内的地址。枚举函数的一个警告是，它仅在 IDA 将代码块标识为函数时才有效。在代码块被标记为函数之前，它会在函数枚举过程中被跳过。未标记为函数的代码在图例中标记为红色（IDA 的 GUI 顶部的彩色条）。这些可以使用函数 `idc.create_insn(ea)` 手动修复或自动修复。
@@ -497,7 +489,7 @@ Python> type(dism_addr)
 <type 'list'>
 
 Python> print(dism_addr)
-[4573123, 4573126, 4573127, 4573132] # These are integer representations of addresses
+[4573123, 4573126, 4573127, 4573132] 
 
 Python> for line in dism_addr: print("0x%x %s" % (line, idc.generate_disasm_line(line, 0)))
 0x45c7c3 mov eax, [ebp-60h]
@@ -518,10 +510,8 @@ for func in idautils.Functions():
     for line in dism_addr:
         m = idc.print_insn_mnem(line)
         if m == 'call' or m == 'jmp':
-            # Check operand type (0 is the first operand)
             op_type = idc.get_operand_type(line, 0)
-            # o_reg corresponds to register operand type
-            if op_type == idc.o_reg: # Assuming o_reg=1 based on later text
+            if op_type == idc.o_reg:
                 print("0x%x %s" % (line, idc.generate_disasm_line(line, 0)))
 Python>
 0x43ebde call eax ; VirtualProtect
@@ -550,18 +540,18 @@ Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0x10004f24 call sub_10004F32
 
 Python> next_instr = idc.next_head(ea)
-Python> print("0x%x %s" % (next_instr, idc.generate_disasm_line(next_instr, 0))) # Corrected print
+Python> print("0x%x %s" % (next_instr, idc.generate_disasm_line(next_instr, 0)))
 0x10004f29 mov [esi], eax
 
 Python> prev_instr = idc.prev_head(ea)
-Python> print("0x%x %s" % (prev_instr, idc.generate_disasm_line(prev_instr, 0))) # Corrected print
+Python> print("0x%x %s" % (prev_instr, idc.generate_disasm_line(prev_instr, 0)))
 0x10004f1e mov [esi+98h], eax
 
 Python> print("0x%x" % idc.next_addr(ea))
 0x10004f25
 
-Python> print("0x%x" % idc.prev_head(ea)) # Note: prev_head gets previous instruction start
-0x10004f23 # This seems incorrect based on description, maybe meant prev_addr?
+Python> print("0x%x" % idc.prev_head(ea))
+0x10004f23 
 ```
 
 在动态调用示例中，IDAPython 代码依赖于使用 `jmp` 和 `call` 的字符串比较。除了使用字符串比较，我们还可以使用 `idaapi.decode_insn(insn_t, ea)` 解码指令。第一个参数是来自 `ida_ua` 的 `insn_t` 类，通过调用 `ida_ua.insn_t()` 创建。一旦调用 `idaapi.decode_insn`，该类就会填充属性。第二个参数是要分析的地址。解码指令可能是有利的，因为使用指令的整数表示可以更快且不易出错。不幸的是，整数表示特定于 IDA，不能轻易移植到其他反汇编工具。下面是相同的示例，但使用 `idaapi.decode_insn(insn_t, ea)` 并比较整数表示。
@@ -579,10 +569,7 @@ Python> for func in idautils.Functions():
         ins = ida_ua.insn_t()
         idaapi.decode_insn(ins, line)
         if ins.itype in CALLS or ins.itype in JMPS:
-            # Check if the first operand (Op1) is a register (o_reg)
-            # Need to verify the constant for o_reg if not using idc
-            # Assuming o_reg corresponds to a specific value, e.g., 1
-            if ins.Op1.type == 1: # Use idaapi.o_reg if available
+            if ins.Op1.type == 1: 
                  print("0x%x %s" % (line, idc.generate_disasm_line(line, 0)))
 
 Python>
@@ -667,7 +654,7 @@ Python> print(idc.get_operand_type(ea, 0))
 Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0xa05dc1     mov eax, [edi+18h]
 
-Python> print(idc.get_operand_type(ea, 1)) # Getting type of the second operand [edi+18h]
+Python> print(idc.get_operand_type(ea, 1))
 4
 ```
 
@@ -679,7 +666,7 @@ Python> print(idc.get_operand_type(ea, 1)) # Getting type of the second operand 
 Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0xa05da1 add esp, 0Ch
 
-Python> print(idc.get_operand_type(ea, 1)) # Getting type of the second operand 0Ch
+Python> print(idc.get_operand_type(ea, 1))
 5
 ```
 
@@ -705,30 +692,25 @@ seg000:00BC1393     call    ds:_strnicmp
 被压入的第二个值是内存偏移量。如果我们右键单击它并将其更改为数据类型；我们会看到指向字符串的偏移量。这样做一两次还可以，但之后我们最好自动化这个过程。
 
 ```python
-min_ea = idc.get_inf_attr(idc.INF_MIN_EA) # Corrected constant usage
-max_ea = idc.get_inf_attr(idc.INF_MAX_EA) # Corrected constant usage
+min_ea = idc.get_inf_attr(idc.INF_MIN_EA)
+max_ea = idc.get_inf_attr(idc.INF_MAX_EA)
 
 # 遍历每个已知函数
 for func in idautils.Functions():
-    flags = idc.get_func_attr(func, idc.FUNCATTR_FLAGS) # Corrected constant usage
+    flags = idc.get_func_attr(func, idc.FUNCATTR_FLAGS)
     # 跳过库函数和 thunk 函数
-    if flags & idc.FUNC_LIB or flags & idc.FUNC_THUNK: # Corrected constant usage
+    if flags & idc.FUNC_LIB or flags & idc.FUNC_THUNK:
         continue
     dism_addr = list(idautils.FuncItems(func))
     for curr_addr in dism_addr:
         # 检查第一个操作数
         if idc.get_operand_type(curr_addr, 0) == idc.o_imm and \
            (min_ea < idc.get_operand_value(curr_addr, 0) < max_ea):
-            # Deprecated: idc.OpOff(curr_addr, 0, 0)
-            # Use set_op_type or op_offset instead depending on IDA version and goal
-            # Example using op_offset (modern approach)
-            idc.op_offset(curr_addr, 0, idc.REF_OFF32) # Or appropriate REF type
+            idc.op_offset(curr_addr, 0, idc.REF_OFF32) 
         # 检查第二个操作数
         if idc.get_operand_type(curr_addr, 1) == idc.o_imm and \
            (min_ea < idc.get_operand_value(curr_addr, 1) < max_ea):
-            # Using modern approach for second operand as well
-            idc.op_offset(curr_addr, 1, idc.REF_OFF32) # Or appropriate REF type
-            # idc.op_plain_offset(curr_addr, 1, 0) # Original, possibly older API usage
+            idc.op_offset(curr_addr, 1, idc.REF_OFF32)
 ```
 
 运行上述代码后，我们现在会看到字符串。
@@ -789,22 +771,19 @@ seg000:00BC1393 call    ds:_strnicmp
 
 ea = 0x0401050
 f = idaapi.get_func(ea)
-# Get FlowChart, specifying FC_PREDS to calculate predecessors
 fc = ida_gdl.FlowChart(f, flags=idaapi.FC_PREDS)
 
 for block in fc:
     print("ID: %i Start: 0x%x End: 0x%x" % (block.id, block.start_ea, block.end_ea))
     if block.start_ea <= ea < block.end_ea:
         print("  Basic Block selected")
-        # Get successors
         successors = block.succs()
-        for succ_block in successors: # Iterate through successor generator
+        for succ_block in successors:
             print("  Successor: 0x%x" % succ_block.start_ea)
-        # Get predecessors
+
         predecessors = block.preds()
-        for pred_block in predecessors: # Iterate through predecessor generator
-            print("  Predecessor: 0x%x" % pred_block.start_ea) # Usually start_ea is more useful
-        # Check if it's a return block
+        for pred_block in predecessors: 
+            print("  Predecessor: 0x%x" % pred_block.start_ea)
         if ida_gdl.is_ret_block(block.type):
             print("  Return Block")
 ```
@@ -849,57 +828,48 @@ ID 为 1 的基本块是一个循环，这就是为什么它有多个后继和�
 结构体布局、结构体名称和类型在编译过程中会从代码中移除。重建结构体并正确标记成员名称可以极大地帮助逆向过程。以下是在 x86 shellcode 中 [常见的汇编片段](https://gist.github.com/tophertimzen/5d32f255292a0201853cb7009fc55fba) 。完整的代码遍历线程环境块 (TEB) 和进程环境块 (PEB) 中的结构体以查找 `kernel32.dll` 的基地址。
 
 ```
-seg000:00000000 xor     ecx, ecx
-seg000:00000002 mov     eax, fs:[ecx+30h]
-seg000:00000006 mov     eax, [eax+0Ch]
-seg000:00000009 mov     eax, [eax+14h]
+seg000:00000000 		xor     ecx, ecx
+seg000:00000002 		mov     eax, fs:[ecx+30h]
+seg000:00000006 		mov     eax, [eax+0Ch]
+seg000:00000009 		mov     eax, [eax+14h]
 ```
 
 通常观察到的下一步是遍历可移植可执行文件格式以查找 Windows API。这种技术最早由 The Last Stage of Delirium 在他们 2002 年的论文[《Win32 Assembly Components》](http://www.lsd-pl.net/winasm.pdf) 中记录。由于解析了所有不同的结构体，除非标记了结构体偏移量，否则很容易迷失方向。如下面的代码所示，即使标记了几个结构体也会很有帮助。
 
 ```
-seg000:00000000 xor     ecx, ecx
-seg000:00000002 mov     eax, fs:[ecx+_TEB.ProcessEnvironmentBlock]
-seg000:00000006 mov     eax, [eax+PEB.Ldr]
-seg000:00000009 mov     eax, [eax+PEB_LDR_DATA.InMemoryOrderModuleList.Flink]
-seg000:0000000C mov     eax, [eax+ecx]
+seg000:00000000 		xor     ecx, ecx
+seg000:00000002 		mov     eax, fs:[ecx+_TEB.ProcessEnvironmentBlock]
+seg000:00000006 		mov     eax, [eax+PEB.Ldr]
+seg000:00000009 		mov     eax, [eax+PEB_LDR_DATA.InMemoryOrderModuleList.Flink]
+seg000:0000000C 		mov     eax, [eax+ecx]
 ```
 
 我们可以使用以下代码将偏移量标记为它们对应的结构体名称。
 
 ```python
-import idc # Ensure idc is imported for the APIs used
+import idc
 
-# Load the necessary type library
 status = idc.add_default_til("ntapi")
 
 if status:
-    # Import specific structure types from the TIL into the IDB
     idc.import_type(-1, "_TEB")
     idc.import_type(-1, "PEB")
     idc.import_type(-1, "PEB_LDR_DATA")
 
-    # Start address of the first instruction using a TEB offset
-    ea = 2 # Assuming seg000 starts at 0, this is the address of the first mov
-
-    # Apply TEB offset
+    ea = 2
     teb_id = idc.get_struc_id("_TEB")
-    if teb_id != idc.BADADDR: # Check if structure ID is valid
+    if teb_id != idc.BADADDR:
         idc.op_stroff(ea, 1, teb_id, 0) # Operand 1 (fs:[ecx+30h]), delta 0
 
-    # Move to the next instruction
-    ea = idc.next_head(ea) # Address of the second mov
+    ea = idc.next_head(ea)
 
-    # Apply PEB offset
-    peb_id = idc.get_struc_id("PEB") # Get PEB structure ID
+    peb_id = idc.get_struc_id("PEB")
     if peb_id != idc.BADADDR:
         idc.op_stroff(ea, 1, peb_id, 0) # Operand 1 ([eax+0Ch]), delta 0
 
-    # Move to the next instruction
-    ea = idc.next_head(ea) # Address of the third mov
+    ea = idc.next_head(ea)
 
-    # Apply PEB_LDR_DATA offset
-    peb_ldr_data_id = idc.get_struc_id("PEB_LDR_DATA") # Get PEB_LDR_DATA structure ID
+    peb_ldr_data_id = idc.get_struc_id("PEB_LDR_DATA")
     if peb_ldr_data_id != idc.BADADDR:
          idc.op_stroff(ea, 1, peb_ldr_data_id, 0)
 ```
@@ -927,35 +897,19 @@ ntdll!_PEB_LDR_DATA
 注意：这些字段在您的机器上应该是静态的，但如果它们不同也不要担心。随着微软添加新字段，这可能会随着时间的推移而改变。查看输出，我们可以看到偏移量、名称和类型。这足以创建我们自己的类型。以下代码检查名为 `my_peb_ldr_data` 的结构体是否存在。如果结构体存在，代码会删除该结构体，创建一个新的结构体，然后从 `nt!_PEB_LDR_DATA` 添加结构体成员字段。
 
 ```python
-import idc # Ensure idc is imported
-
-# Get the structure ID for "my_peb_ldr_data"
 sid = idc.get_struc_id("my_peb_ldr_data")
-
-# If the structure exists (ID is not BADADDR), delete it
 if sid != idc.BADADDR:
-    idc.del_struc(sid)
-
-# Add a new structure named "my_peb_ldr_data", -1 means add at the end, 0 means not a union
+idc.del_struc(sid)
 sid = idc.add_struc(-1, "my_peb_ldr_data", 0)
-
-# Check if structure creation was successful before adding members
-if sid != idc.BADADDR:
-    # Add members based on the Windbg output
-    # add_struc_member(sid, member_name, offset, flag, typeid, nbytes)
-    idc.add_struc_member(sid, "Length", 0x0, idc.FF_DWORD, -1, 4)
-    idc.add_struc_member(sid, "Initialized", 0x4, idc.FF_BYTE, -1, 1) # UChar is 1 byte
-    idc.add_struc_member(sid, "SsHandle", 0x8, idc.FF_QWORD, -1, 8) # Ptr64 is 8 bytes
-    idc.add_struc_member(sid, "InLoadOrderModuleList", 0x10, idc.FF_QWORD + idc.FF_QWORD, -1, 16) # LIST_ENTRY is 16 bytes (Flink+Blink)
-    idc.add_struc_member(sid, "InMemoryOrderModuleList", 0x20, idc.FF_QWORD + idc.FF_QWORD, -1, 16)
-    idc.add_struc_member(sid, "InInitializationOrderModuleList", 0x30, idc.FF_QWORD + idc.FF_QWORD, -1, 16)
-    idc.add_struc_member(sid, "EntryInProgress", 0x40, idc.FF_QWORD, -1, 8)
-    idc.add_struc_member(sid, "ShutdownInProgress", 0x48, idc.FF_BYTE, -1, 1)
-    idc.add_struc_member(sid, "ShutdownThreadId", 0x50, idc.FF_QWORD, -1, 8)
-else:
-    print("Failed to create structure 'my_peb_ldr_data'")
-# Corrected member addition: Using FF_QWORD for Ptr64
-idc.add_struc_member(sid, "shutdown_thread_id", 0x50, idc.FF_QWORD, -1, 8)
+idc.add_struc_member(sid, "length", 0, idc.FF_DWORD, -1, 4)
+idc.add_struc_member(sid, "initialized", 4, idc.FF_DWORD, -1, 4)
+idc.add_struc_member(sid, "ss_handle", -1, idc.FF_WORD, -1, 2)
+idc.add_struc_member(sid, "in_load_order_module_list", -1, idc.FF_DATA, -1, 10)
+idc.add_struc_member(sid, "in_memory_order_module_list", -1, idc.FF_QWORD + idc.FF_WORD, -1, 10)
+idc.add_struc_member(sid, "in_initialization_order_module_list", -1, idc.FF_QWORD + idc.FF_WORD, -1, 10)
+idc.add_struc_member(sid, "entry_in_progress", -1, idc.FF_QWORD, -1, 8)
+idc.add_struc_member(sid, "shutdown_in_progress", -1, idc.FF_WORD, -1, 2)
+idc.add_struc_member(sid, "shutdown_thread_id", -1, idc.FF_QWORD, -1, 8)
 ```
 
 我们代码的第一步是调用 `idc.get_struc_id(struct_name)` 按名称返回结构体的 id。如果不存在名为 `"my_peb_ldr_data"` 的结构体，`idc.get_struc_id` 返回 `idc.BADADDR`。如果结构体 id 不是 `idc.BADADDR`，那么我们就知道一个名为 `"my_peb_ldr_data"` 的结构体已经存在。对于这个例子，我们通过调用 `idc.del_struc(sid)` 来删除该结构体。它接受结构体 id 的单个参数。要创建结构体，代码调用 `idc.add_struc(index, name, is_union)`。第一个参数是新结构体的索引。与 `idc.import_type` 一样，最佳实践是传递值 -1。这指定 IDA 应该使用下一个最大的 id 索引。传递给 `idc.add_struc` 的第二个参数是结构体名称。第三个参数 `is_union` 是一个布尔值，用于定义新创建的结构体是否为联合。在上面的代码中，我们传递值 0 来指定它不是联合。结构体的成员可以通过调用 `idc.add_struc_member(sid, name, offset, flag, typeid, nbytes)` 来标记。注意：`idc.add_struc_member` 有更多参数，但由于它们用于更复杂的定义，我们将不在此处介绍。如果您有兴趣了解如何创建更复杂的定义，我建议您稍后深入研究 IDAPython 源代码。第一个参数是先前分配给变量 `sid` 的结构体 id。第二个参数是成员名称的字符串。第三个参数是 `offset`。偏移量可以是 -1 以添加到结构体的末尾，也可以是整数值以指定偏移量。第四个参数是 `flag`。标志指定数据类型（字、浮点数等）。可用的标志数据类型如下所示。
@@ -1021,64 +975,36 @@ import idc
 import idaapi      
 
 def ror32(val, amt):
-    amt &= 31 # Ensure amt is within 0-31 range for 32-bit rotate
+    amt &= 31
     return ((val >> amt) | (val << (32 - amt))) & 0xffffffff
 
 def add32(val, amt):
     return (val + amt) & 0xffffffff
 
-# Corrected z0mbie hash - ensure proper handling of character encoding if needed
 def z0mbie_hash(name):
     hash_val = 0
-    # Assuming name is bytes or ASCII, adjust if necessary
-    for char_byte in name.encode('ascii'): # Encode to bytes if it's a string
-        # ROR13 the current hash
+    for char_byte in name.encode('ascii'):
         hash_val = ror32(hash_val, 13)
-        # Add the current character byte
         hash_val = add32(hash_val, char_byte)
     return hash_val
 
 def get_name_from_hash(file_name, target_hash):
-    try:
-        pe = pefile.PE(file_name)
-        if hasattr(pe, 'DIRECTORY_ENTRY_EXPORT'):
-            for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
-                if exp.name: # Check if name exists
-                    # Calculate hash of the export name
-                    current_hash = z0mbie_hash(exp.name)
-                    if current_hash == target_hash:
-                        return exp.name.decode('ascii') # Decode bytes name to string
-    except pefile.PEFormatError as e:
-        print(f"Error parsing PE file {file_name}: {e}")
-    except Exception as e:
-        print(f"An error occurred: {e}")
-    return None
+    pe = pefile.PE(file_name)
+    for exp in pe.DIRECTORY_ENTRY_EXPORT.symbols:
+        if z0mbie_hash(exp.name) == target_hash:
+            return exp.name
 
-# Example usage
-target_hash = 0xCA2BD06B
-dll_path = "C:\\Windows\\System32\\kernel32.dll" # Adjust path as needed
-api_name = get_name_from_hash(dll_path, target_hash)
-
+api_name = get_name_from_hash("kernel32.dll", 0xCA2BD06B)
 if api_name:
-    print(f"Hash {target_hash:#x} corresponds to API: {api_name}")
-    # Add the enum and member in IDA
-    enum_name = "z0mbie_hashes"
-    enum_id = idc.add_enum(-1, enum_name, idaapi.hexflag())
-    if enum_id != idc.BADADDR:
-        # Add the member
-        idc.add_enum_member(enum_id, api_name, target_hash) # Removed serial -1, not needed
-        print(f"Enum '{enum_name}' created/updated with member '{api_name}' = {target_hash:#x}")
-    else:
-        print(f"Failed to create enum '{enum_name}'")
-else:
-    print(f"Could not find API name for hash {target_hash:#x} in {dll_path}")
+    id = idc.add_enum(-1, "z0mbie_hashes", idaapi.hexflag())
+    idc.add_enum_member(id, api_name, 0xCA2BD06B, -1)
 ```
 
 第一行将 `pefile` 导入 IDA。两个函数 `ror32` 和 `add32` 负责复制 ROR 指令。函数 `z0mbie_hash(name)` 接受要哈希的字符串的单个参数并返回哈希值。最后一个函数 `get_name_from_hash(file_path, hash)` 接受两个参数。第一个参数是要哈希符号的 DLL 的文件路径。第二个参数是我们正在搜索的名称。该函数返回字符串名称。此函数中的第一行调用 `pefile.PE(file_path)`来加载并解析`kernel32.dll`。pefile PE 实例保存在变量 `pe`中。DLL 中的每个符号都通过循环遍历`pe.DIRECTORY_ENTRY_EXPORT.symbols`中的每一项来进行迭代。该字段包含 DLL 中每个导出符号的名称、地址和其他属性。符号名称通过调用`z0mbie_hash(exp.name)`进行哈希，然后进行比较。如果匹配，则返回符号名称并将其分配给`api_name`。此时，在代码中完成枚举的创建和添加。添加枚举的第一步是创建枚举 id。这是通过调用 `idc.add_enum(idx, name, flag)`来完成的。第一个参数是`idx`或新枚举的序列号。值 -1 分配下一个可用的 id。第二个参数是枚举的名称。最后一个参数是标志，即`idaapi.hexflag()`。执行代码后，如果我们在 IDA 中高亮显示值 `0xCA2BD06B` 时按下快捷键 `M`，我们会看到字符串 `CreateThread` 作为符号常量选项。以下代码是我们之前看到的带有哈希现在是符号常量的代码。
 ```
-seg000:00000015 mov [ebp-4], ebx
-seg000:00000018 push CreateThread ; ROR 13 hash of CreateThread
-seg000:0000001D push dword ptr [ebp-4]
+seg000:00000015 		mov [ebp-4], ebx
+seg000:00000018 		push CreateThread ; ROR 13 hash of CreateThread
+seg000:0000001D 		push dword ptr [ebp-4]
 ```
 
 
@@ -1205,18 +1131,17 @@ Python> print("0x%x %s" % (xref.frm, idc.generate_disasm_line(xref.frm, 0))) # D
 我们的光标在 `0x1000AB02`。此地址有一个来自 `0x1000AAF6` 的交叉引用，但它也有第二个到 `0x1000AAF6` 的交叉引用（原文似乎有误，应该是到 0x1000AB02）。
 
 ```python
-Python> ea = 0x1000AB02 # Assuming ea is set to this address
+Python> ea = 0x1000AB02 
 Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0x1000ab02 mov     byte ptr [ebx], 1
-Python> for xref in idautils.XrefsTo(ea, 1): # flags=1 (filter flow)
-    print("%i %s 0x%x 0x%x %i" % (xref.type, idautils.XrefTypeName(xref.type), xref.frm, xref.to, xref.iscode))
 
+Python> for xref in idautils.XrefsTo(ea, 1):
+    print("%i %s 0x%x 0x%x %i" % (xref.type, idautils.XrefTypeName(xref.type), xref.frm, xref.to, xref.iscode))
 Python>
 19 Code_Near_Jump 0x1000aaf6 0x1000ab02 1
 
 Python> for xref in idautils.XrefsTo(ea, 0): # flags=0 (show all)
     print("%i %s 0x%x 0x%x %i" % (xref.type, idautils.XrefTypeName(xref.type), xref.frm, xref.to, xref.iscode))
-
 Python>
 21 Ordinary_Flow 0x1000aaff 0x1000ab02 1
 19 Code_Near_Jump 0x1000aaf6 0x1000ab02 1
@@ -1225,14 +1150,14 @@ Python>
 第二个交叉引用来自 `0x1000AAFF` 到 `0x1000AB02`。交叉引用不必由分支指令引起。它们也可能由正常的普通代码流引起。如果我们将标志设置为 1，则不会添加 `Ordinary_Flow` 引用类型。现在回到我们之前的 `RtlCompareMemory` 示例。我们可以使用 `idautils.XrefsTo(ea, flow)` 来获取所有交叉引用。
 
 ```python
-Python>print("0x%x" % ea)
+Python> print("0x%x" % ea)
 0xa26c78
+
 Python> idc.set_name(ea, "RtlCompareMemory", idc.SN_CHECK) # Set the name
 True
 
 Python> for xref in idautils.XrefsTo(ea, 1): # Using flags=1
     print("%i %s 0x%x 0x%x %i" % (xref.type, idautils.XrefTypeName(xref.type), xref.frm, xref.to, xref.iscode))
-
 Python>
 3 Data_Read 0xa142a3 0xa26c78 0
 3 Data_Read 0xa143e8 0xa26c78 0
@@ -1246,9 +1171,8 @@ Python> ea = idc.get_name_ea_simple("GetProcessHeap")
 Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0xa21138 extrn GetProcessHeap:dword
 
-Python> for xref in idautils.XrefsTo(ea, 1): # Using flags=1
+Python> for xref in idautils.XrefsTo(ea, 1):
     print("%i %s 0x%x 0x%x %i" % (xref.type, idautils.XrefTypeName(xref.type), xref.frm, xref.to, xref.iscode))
-
 Python>
 17 Code_Near_Call 0xa143b0 0xa21138 1
 17 Code_Near_Call 0xa1bb1b 0xa21138 1
@@ -1318,28 +1242,15 @@ SEARCH_BRK = 256
 以前版本的 IDA 包含一个 `SEARCH_UNICODE` 的 `sflag` 用于搜索 Unicode 字符串。由于 IDA 默认搜索 ASCII 和 Unicode，因此在搜索字符时不再需要此标志。让我们快速浏览一下查找前面提到的函数序言字节模式。
 
 ```python
-import ida_search # Need to import the module
-import idc
-
-Python>pattern = '55 8B EC'
-Python>start_addr = idc.get_inf_attr(idc.INF_MIN_EA)
-Python>end_addr = idc.BADADDR # Search until the end of the address space
-
-# Find the first occurrence
-addr = ida_search.find_binary(start_addr, end_addr, pattern, 16, ida_search.SEARCH_DOWN)
-
-# Loop to find multiple occurrences (Original code had a fixed loop of 5)
-found_count = 0
-max_finds = 5 # Limit the number of finds for the example
-while addr != idc.BADADDR and found_count < max_finds:
-    print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
-    found_count += 1
-    # Find the next occurrence starting from the address after the current one
-    addr = ida_search.find_binary(addr + 1, end_addr, pattern, 16, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT) # Add SEARCH_NEXT
+Python> pattern = '55 8B EC'
+addr = idc.get_inf_attr(INF_MIN_EA)
+for x in range(0, 5):
+	addr = ida_search.find_binary(addr, idc.BADADDR, pattern, 16,ida_search.SEARCH_DOWN)
+    if addr != idc.BADADDR:
+    	print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
 
 Python>
-# Example output (will vary based on the binary)
-0x401000 push    ebp # Assuming 55 is the first byte of push ebp
+0x401000 push    ebp
 0x401040 push    ebp
 0x401070 push    ebp
 0x4010e0 push    ebp
@@ -1351,39 +1262,12 @@ Python>
 搜索时，验证搜索确实找到了模式很重要。这是通过将 `addr` 与 `idc.BADADDR` 进行比较来测试的。然后我们打印地址和反汇编。注意地址没有增加吗？这是因为我们没有传递 `SEARCH_NEXT` 标志。如果不传递此标志，则使用当前地址来搜索模式。如果最后一个地址包含我们的字节模式，则搜索将永远不会递增超过它。下面是带有 `SEARCH_NEXT` 标志在 `SEARCH_DOWN` 之前的更正版本。
 
 ```python
-import ida_search
-import idc
-
-Python>pattern = '55 8B EC'
-Python>start_addr = idc.get_inf_attr(idc.INF_MIN_EA)
-Python>end_addr = idc.BADADDR
-
-# Loop to find multiple occurrences using SEARCH_NEXT
-addr = start_addr
-found_count = 0
-max_finds = 5 # Limit the number of finds
-
-while found_count < max_finds:
-    # Find occurrence starting from 'addr'
-    # Important: SEARCH_NEXT finds the *next* match *after* the start address if start itself matches.
-    # To find the first match *at* or after start_addr, don't use SEARCH_NEXT initially.
-    # For subsequent finds, start search from addr + 1.
-    current_find = ida_search.find_binary(addr, end_addr, pattern, 16,
-                                          ida_search.SEARCH_DOWN | (ida_search.SEARCH_NEXT if found_count > 0 else 0))
-
-    if current_find == idc.BADADDR:
-        break # No more matches
-
-    # Check if we found the same address again (can happen without advancing addr properly)
-    # This check is important if SEARCH_NEXT isn't used or if logic is complex.
-    # if found_count > 0 and current_find == addr:
-    #     print("Stuck finding the same address. Breaking.")
-    #     break
-
-    addr = current_find # Update addr to the found location
-    print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
-    found_count += 1
-    addr += 1 # Advance search start for the next iteration
+Python> pattern = '55 8B EC'
+addr = idc.get_inf_attr(INF_MIN_EA)
+for x in range(0, 5):
+    addr = ida_search.find_binary(addr, idc.BADADDR, pattern, 16, ida_search.SEARCH_NEXT|ida_search.SEARCH_DOWN)
+    if addr != idc.BADADDR:
+    	print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0))
 
 Python>
 0x401000 push    ebp
@@ -1396,36 +1280,15 @@ Python>
 搜索字节模式很有用，但有时我们可能想搜索字符串，例如 `"chrome.dll"`。我们可以使用 `[hex(y) for y in bytearray("chrome.dll", 'ascii')]` 将字符串转换为十六进制字节，但这有点难看。而且，如果字符串是 Unicode，我们需要考虑该编码。最简单的方法是使用 `ida_search.find_text(ea, y, x, searchstr, sflag)`。这些字段中的大多数应该看起来很熟悉，因为它们与 `ida_search.find_binary` 相同。`ea` 是起始地址。`y` 是从 `ea` 开始搜索的行数，`x` 是行中的坐标。字段 `y` 和 `x` 通常分配为 0。`searchstr` 是要搜索的模式，`sflag` 定义了搜索的方向和类型。例如，我们可以搜索字符串 "Accept" 的所有出现。字符串窗口 (`shift+F12`) 中的任何字符串都可以用于此示例搜索。
 
 ```python
-import ida_search
-import idc
-
-Python>start_addr = idc.get_inf_attr(idc.INF_MIN_EA)
-Python>end_addr = idc.get_inf_attr(idc.INF_MAX_EA) # Use MAX_EA for a defined end
-
-# Find the first occurrence
-cur_addr = ida_search.find_text(start_addr, 0, 0, "Accept", ida_search.SEARCH_DOWN)
-
-found_count = 0
-max_finds = 7 # Limit finds for example
-
-while cur_addr != idc.BADADDR and cur_addr < end_addr and found_count < max_finds:
-    # Print the found line - generate_disasm_line might not be appropriate if it's data
-    # Let's try getting the string itself if it's defined as such
-    str_content = idc.get_strlit_contents(cur_addr)
-    if str_content:
-        print("0x%x String: %s" % (cur_addr, str_content.decode('utf-8', errors='ignore'))) # Decode bytes to string
-    else:
-        # Fallback to disassembly line if not a string literal
-        print("0x%x %s" % (cur_addr, idc.generate_disasm_line(cur_addr, 0)))
-
-    found_count += 1
-    # Find the next occurrence starting AFTER the current one
-    # We need SEARCH_NEXT here. Starting from cur_addr + 1 is safer.
-    cur_addr = ida_search.find_text(cur_addr + 1, 0, 0, "Accept",
-                                     ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT)
+Python> cur_addr = idc.get_inf_attr(INF_MIN_EA)
+for x in range(0, 5):
+    cur_addr = ida_search.find_text(cur_addr, 0, 0, "Accept", ida_search.SEARCH_DOWN)
+    if addr == idc.BADADDR:
+        break
+    print("0x%x %s" % (cur_addr, idc.generate_disasm_line(cur_addr, 0)))
+    cur_addr = idc.next_head(cur_addr)
 
 Python>
-# Example Output (will vary based on the binary)
 0x40da72 push    offset aAcceptEncoding ; "Accept-Encoding:\n"
 0x40face push    offset aHttp1_1Accept ; " HTTP/1.1\r\nAccept: */* \r\n "
 0x40fadf push    offset aAcceptLanguage ; "Accept-Language: ru \r\n"
@@ -1463,12 +1326,11 @@ Python>
 `f` 对我们来说是新的。我们不是传递地址，而是首先需要获取内部标志表示，然后将其传递给我们的 `idc.is_*` 函数集。要获取内部标志，我们使用 `idc.get_full_flags(ea)`。现在我们对该函数的使用方法和不同类型有了一些基础知识，让我们做一个快速示例。
 
 ```python
-Python> ea = 0x10001000 # Example address
 Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0x10001000 push    ebp
 
 Python> flags = idc.get_full_flags(ea)
-Python> print(idc.is_code(flags)) # Pass the flags variable
+Python> print(idc.is_code(flags))
 True
 ```
 
@@ -1477,14 +1339,12 @@ True
 它用于查找标记为代码的下一个地址。如果我们想查找数据块的末尾，这可能很有用。如果 `ea` 是已经标记为代码的地址，它将返回下一个地址。该标志如前所述在 `ida_search.find_text` 中使用。
 
 ```python
-import ida_search
-import idc
-
-Python>ea = 0x4140e8 # Address of data
-Python>print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
+Python> ea = 0x4140e8
+Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0x4140e8 dd offset dword_4140EC
-Python>addr = ida_search.find_code(ea, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT)
-Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
+
+Python> addr = ida_search.find_code(ea, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT)
+Python> print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
 0x41410c push    ebx
 ```
 
@@ -1495,14 +1355,12 @@ Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
 它的用法与 `ida_search.find_code` 完全相同，只是它返回标记为数据块的下一个地址的开头。如果我们反转前面的场景，从代码地址开始并向上搜索以查找数据的开头。
 
 ```python
-import ida_search
-import idc
-
-Python>ea = 0x41410c # Address of code
-Python>print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
+Python> ea = 0x41410c # Address of code
+Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0x41410c push    ebx
-Python>addr = ida_search.find_data(ea, ida_search.SEARCH_UP | ida_search.SEARCH_NEXT) # Search UP
-Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0))) # Might still show disassembly
+
+Python> addr = ida_search.find_data(ea, ida_search.SEARCH_UP | ida_search.SEARCH_NEXT)
+Python> print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
 0x4140ec dd 49540E0Eh, 746E6564h, 4570614Dh, 7972746Eh, 8, 1, 4010BCh
 ```
 
@@ -1513,14 +1371,12 @@ Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0))) # Might stil
 此函数用于查找 IDA 未识别为代码或数据的字节地址。未知类型需要通过可视化或脚本进行进一步的手动分析。
 
 ```python
-import ida_search
-import idc
-
-Python>ea = 0x406a05 # Address near unknown data
-Python>print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
+Python> ea = 0x406a05
+Python> print("0x%x %s" % (ea, idc.generate_disasm_line(ea, 0)))
 0x406a05 jge     short loc_406A3A
-Python>addr = ida_search.find_unknown(ea, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT) # SEARCH_NEXT might not be needed if searching from current addr
-Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0))) # Disassembly might show 'db ?'
+
+Python> addr = ida_search.find_unknown(ea, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT)
+Python> print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
 0x41b004 db 0DFh ; ?
 ```
 
@@ -1528,18 +1384,17 @@ Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0))) # Disassembl
 
 它用于查找 IDA 已识别为代码或数据的地址。
 
-````markdown
-```python
-Python>print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0))) # Using addr from previous line
+````python
+0x41b900 db ? ;
+Python> addr = ida_search.find_defined(ea, SEARCH_UP)
+Python> print("0x%x %s" % (addr, idc.generate_disasm_line(addr, 0)))
 0x41b5f4 dd ?
-```
 ````
 
 这可能看起来没什么实际价值，但如果我们打印 `addr` 的交叉引用，我们会看到它正在被使用。
 
 ```python
-Python>addr = 0x41b5f4 # Assign the address found previously
-Python>for xref in idautils.XrefsTo(addr, 1): # Find xrefs TO this data address
+Python> for xref in idautils.XrefsTo(addr, 1):
     print("0x%x %s" % (xref.frm, idc.generate_disasm_line(xref.frm, 0)))
 
 Python>
@@ -1551,37 +1406,22 @@ Python>
 除了搜索类型，我们可能还想搜索特定的值。比如，我们感觉代码调用了 `rand` 来生成随机数，但找不到代码。如果我们知道 `rand` 使用值 `0x343FD` 作为种子，我们可以通过 `ida_search.find_imm(idc.get_inf_attr(idc.INF_MIN_EA), ida_search.SEARCH_DOWN, 0x343FD)` 搜索该数字。
 
 ```python
-import ida_search
-import idc
-
-Python>min_ea = idc.get_inf_attr(idc.INF_MIN_EA)
-Python># The result is a list/tuple: [address, operand_index]
-Python>result = ida_search.find_imm(min_ea, ida_search.SEARCH_DOWN, 0x343FD)
-Python>print(result) # Print the list/tuple
-[268453092, 1] # Example: Address 0x100044e4, Operand 1
-Python>if result[0] != idc.BADADDR: # Check if an address was found
-    addr = result[0]
-    op_index = result[1]
-    print("0x%x %s ; Operand Index %x" % (addr, idc.generate_disasm_line(addr, 0), op_index)) # Corrected print
-
-0x100044e4 imul    eax, [ebp+arg_4], 343FDh ; Operand Index 1
-# Original OCR output had 0 at the end which was the operand index. Updated print format.
+Python> addr = ida_search.find_imm(get_inf_attr(INF_MIN_EA), SEARCH_DOWN, 0x343FD )
+Python> addr
+[268453092, 0]
+Python> print("0x%x %s %x" % (addr[0], idc.generate_disasm_line(addr[0], 0), addr[1]))
+0x100044e4 imul eax, 343FDh 0
 ```
 
 在第一行中，我们通过 `idc.get_inf_attr(idc.INF_MIN_EA)` 传递最小地址，向下搜索，然后搜索值 `0x343FD`。与前面 Find API 中显示返回地址不同，`ida_search.find_imm` 返回一个元组。元组中的第一项是地址，第二项是操作数。就像 `idc.print_operand` 的返回值一样，第一个操作数从零开始。当我们打印地址和反汇编时，我们可以看到该值是第二个操作数（索引 1）。如果我们想搜索立即值的所有用法，我们可以执行以下操作。
 
 ```python
-import ida_search
-import idc
-
-Python> addr = idc.get_inf_attr(idc.INF_MIN_EA)
+Python> addr = idc.get_inf_attr(INF_MIN_EA)
 while True:
-    # find_imm returns (address, operand_index) or (BADADDR, -1)
-    found_addr, operand = ida_search.find_imm(addr, ida_search.SEARCH_DOWN | ida_search.SEARCH_NEXT, 4)
-
-    if found_addr == idc.BADADDR:
-        break
-    print("0x%x %s Operand %i" % (found_addr, idc.generate_disasm_line(found_addr, 0), operand))
+    addr, operand = ida_search.find_imm(addr, SEARCH_DOWN | SEARCH_NEXT, 4)
+    if addr == BADADDR:
+    	break
+    print("0x%x %s Operand %i" % (addr, idc.generate_disasm_line(addr, 0), operand))
 
 Python>
 0x402434 dd 9, 0FF0Bh, 0Ch, 0FF0Dh, 0Dh, 0FF13h, 13h, 0FF1Bh, 1Bh Operand 0
@@ -1601,13 +1441,13 @@ Python>
 我们并不总是需要搜索代码或数据。在某些情况下，我们已经知道代码或数据的位置，但我们想选择它进行分析。在这种情况下，我们可能只想突出显示代码并在 IDAPython 中开始处理它。要获取所选数据的边界，我们可以使用 `idc.read_selection_start()` 获取开始地址，并使用 `idc.read_selection_end()` 获取结束地址。假设我们选择了以下代码。
 
 ```
-.text:00408E46 push    ebp
-.text:00408E47 mov     ebp, esp
-.text:00408E49 mov     al, byte ptr dword_42A508
-.text:00408E4E sub     esp, 78h
-.text:00408E51 test    al, 10h
-.text:00408E53 jz      short loc_408E78
-.text:00408E55 lea     eax, [ebp+Data]
+.text:00408E46 		push    ebp
+.text:00408E47 		mov     ebp, esp
+.text:00408E49 		mov     al, byte ptr dword_42A508
+.text:00408E4E 		sub     esp, 78h
+.text:00408E51 		test    al, 10h
+.text:00408E53 		jz      short loc_408E78
+.text:00408E55 		lea     eax, [ebp+Data]
 ```
 
 我们可以使用以下代码打印出地址。
@@ -1662,13 +1502,11 @@ for func in idautils.Functions():
     dism_addr = list(idautils.FuncItems(func))
     for ea in dism_addr:
         if idc.print_insn_mnem(ea) == "xor":
-            # Check if operands are the same (common way to zero a register)
             op1_str = idc.print_operand(ea, 0)
             op2_str = idc.print_operand(ea, 1)
-            if op1_str == op2_str and op1_str != "": # Ensure operands exist
+            if op1_str == op2_str and op1_str != "":
                 comment = "%s = 0" % (op1_str)
-                idc.set_cmt(ea, comment, 0) # Add non-repeatable comment
-
+                idc.set_cmt(ea, comment, 0)
 ```
 
 如前所述，我们通过调用 `idautils.Functions()` 循环遍历所有函数，并通过调用 `list(idautils.FuncItems(func))` 循环遍历所有指令。我们使用 `idc.print_insn_mnem(ea)` 读取助记符，并检查它是否等于 `xor`。如果是，我们使用 `idc.print_operand(ea, n)` 验证操作数是否相等。如果相等，我们创建一个带有操作数的字符串，然后添加一个不可重复的注释。
@@ -1814,14 +1652,11 @@ import idc
 import ida_name # For GN_VISIBLE
 
 def rename_wrapper(name, func_addr):
-    # Attempt to rename the function, SN_NOWARN suppresses the warning dialog if name exists
     if idc.set_name(func_addr, name, idc.SN_NOWARN):
-        # Get the potentially new name (might be adjusted by IDA if collision occurred without NOWARN)
         new_name = idc.get_func_name(func_addr)
         print("Function at 0x%x renamed %s" % (func_addr, new_name))
     else:
-        # Renaming failed, likely because the name was already in use (even with SN_NOWARN, it might fail silently or return False)
-        existing_name = idc.get_name(func_addr) # Get current name to show in message
+        existing_name = idc.get_name(func_addr)
         print("Rename at 0x%x failed. Name '%s' conflicts or another error occurred. Current name: '%s'." % (func_addr, name, existing_name))
     return
 
@@ -1832,34 +1667,27 @@ def check_for_wrapper(func):
         return
 
     dism_addr = list(idautils.FuncItems(func))
-    # get length of the function
     func_length = len(dism_addr)
-    # if over 32 lines of instruction return
     if func_length > 0x20:
         return
 
     func_call = 0
     instr_cmp = 0
-    target_op_addr = None # Renamed op_addr for clarity
-    target_op_type = None # Renamed op_type for clarity
+    target_op_addr = None
+    target_op_type = None
 
-    # for each instruction in the function
     for ea in dism_addr:
         m = idc.print_insn_mnem(ea)
 
         if m == 'call' or m == 'jmp':
-            # Handle JMP: Check if it jumps outside the function
             if m == 'jmp':
                 temp_target = idc.get_operand_value(ea, 0)
-                # ignore jump conditions within the function boundaries
-                # Need function start/end to check if temp_target is inside
                 func_start = idc.get_func_attr(func, idc.FUNCATTR_START)
                 func_end = idc.get_func_attr(func, idc.FUNCATTR_END)
                 if func_start <= temp_target < func_end:
-                    continue # It's a jump within the function, not a wrapper tail jump
+                    continue
 
             func_call += 1
-            # wrappers should not contain multiple function calls/tail jumps
             if func_call >= 2: # Allow one call/jmp
                 return
 
@@ -1875,18 +1703,14 @@ def check_for_wrapper(func):
         else:
             continue
 
-    # all instructions in the function have been analyzed
     if target_op_addr is None or target_op_addr == idc.BADADDR:
         return
 
-    # Get the name of the target address, preferring user names (GN_VISIBLE)
     name = idc.get_name(target_op_addr, ida_name.GN_VISIBLE)
 
-    # skip mangled function names or unnamed addresses
-    if not name or "[" in name or "$" in name or "?" in name or "@" in name: # Removed name == "" check as get_name returns "" if no name
+    if not name or "[" in name or "$" in name or "?" in name or "@" in name:
         return
 
-    # Construct wrapper name
     wrapper_name = "w_" + name
     if target_op_type == 7:
         target_flags = idc.get_func_attr(target_op_addr, idc.FUNCATTR_FLAGS)
