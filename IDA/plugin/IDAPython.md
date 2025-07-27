@@ -48,14 +48,11 @@
 
 这是一本关于 IDAPython 的书。
 
-我最初写这本书是为了给自己做一个参考——我想要一个地方可以找到我在 IDAPython 中常用（和忘记）的函数示例。自从我开始写这本书以来，我已经多次使用它作为快速参考来理解语法或查看一些代码的示例——如果你读过我的博客 [^1] ，你可能会注意到一些熟悉的面孔——我在这里介绍的很多脚本都是我在网上记录的实验结果。
+我最初写这本书是为了给自己做一个参考——我想要一个地方可以找到我在 IDAPython 中常用（和忘记）的函数示例。自从我开始写这本书以来，我已经多次使用它作为快速参考来理解语法或查看一些代码的示例——如果你读过 [我的博客](https://hooked-on-mnemonics.blogspot.com) ，你可能会注意到一些熟悉的面孔——我在这里介绍的很多脚本都是我在网上记录的实验结果。
 
-多年来，我收到了许多电子邮件，询问学习 IDAPython 的最佳指南是什么。通常我会推荐他们阅读 Ero Carrera 的《IDAPython 简介》或 IDAPython 公共仓库 [^2] 中的示例脚本。它们是学习的优秀资源，但它们并没有涵盖我遇到的一些常见问题。我想写一本能够解决这些问题的书。我觉得这本书对任何学习 IDAPython 或想要快速参考示例和代码片段的人来说都很有价值。作为一本电子书，它不会是一份静态文档，我计划在未来定期更新它。
+多年来，我收到了许多电子邮件，询问学习 IDAPython 的最佳指南是什么。通常我会推荐他们阅读 Ero Carrera 的《IDAPython 简介》或 [IDAPython 公共仓库](https://github.com/idapython/src) 中的示例脚本。它们是学习的优秀资源，但它们并没有涵盖我遇到的一些常见问题。我想写一本能够解决这些问题的书。我觉得这本书对任何学习 IDAPython 或想要快速参考示例和代码片段的人来说都很有价值。作为一本电子书，它不会是一份静态文档，我计划在未来定期更新它。
 
 如果您遇到任何问题、拼写错误或有任何疑问，请发送电子邮件至 alexander.hanel@gmail.com 或在 Twitter 上联系我 @nullandnull。
-
-[^1]: hooked-on-mnemonics.blogspot.com/
-[^2]: https://github.com/idapython/src
 
 ## 更新
 
@@ -80,6 +77,10 @@
   - 添加了 PyQt 章节
   - 添加了 Unicorn 引擎章节
   - 添加了调试章节
+- **版本 7.0:**
+  - 支持 IDAPython 9.0
+
+https://docs.hex-rays.com/developer-guide/idapython/idapython-porting-guide-ida-9
 
 ## 目标读者和免责声明
 
@@ -94,15 +95,15 @@ IDA 的输出窗口（命令行界面）用于大多数示例和输出。为了�
 有时使用此约定会引发错误。
 
 ```python
-Python> DataRefsTo(here()) # 没有问题
+Python> DataRefsTo(here()) 
 <generator object refs at 0x05247828>
 
-Python> idautils.DataRefsTo(here()) # 导致异常
+Python> idautils.DataRefsTo(here()) 
 Traceback (most recent call last):
   File "<string>", line 1, in <module>
 NameError: name 'idautils' is not defined
 
-Python> import idautils # 手动导入模块
+Python> import idautils 
 Python> idautils.DataRefsTo(here())
 <generator object refs at 0x06A398C8>
 ```
@@ -119,7 +120,7 @@ IDAPython 创建于 2004 年。它是 Gergely Erdelyi 和 Ero Carrera 共同努�
 
 ## 旧版与新版
 
-2017 年 9 月，IDA 7.0 发布。此版本是 HexRays 的一次重大更新，因为 IDA 从 x86 移植到 x86_64 二进制文件。此版本的一个副作用是需要重新编译旧插件。即使 IDAPython 的底层发生了一些重大变化（有关更多详细信息，请参阅 Hex-Rays 的“IDA 7.0：IDAPython 向后兼容 6.95 API”[^3]）；旧脚本仍将在 7.0 中执行。从 6.95 到 7.0 的向后兼容性是由于 `IDADIR\python\idc_bc695.py` 中存在的兼容性层。以下代码是兼容性层代码的示例。
+2017 年 9 月，IDA 7.0 发布。此版本是 HexRays 的一次重大更新，因为 IDA 从 x86 移植到 x86_64 二进制文件。此版本的一个副作用是需要重新编译旧插件。即使 IDAPython 的底层发生了一些重大变化（有关更多详细信息，请参阅 Hex-Rays 的 [IDA 7.0：IDAPython 向后兼容 6.95 API](https://www.hex-rays.com/products/ida/7.0/docs/idapython_backward_compat_695.shtml) ）；旧脚本仍将在 7.0 中执行。从 6.95 到 7.0 的向后兼容性是由于 `IDADIR\python\idc_bc695.py` 中存在的兼容性层。以下代码是兼容性层代码的示例。
 
 ```python
 def MakeName(ea, name): return set_name(ea, name, SN_CHECK)
@@ -139,11 +140,9 @@ def MakeName(ea, name): return set_name(ea, name, SN_CHECK)
 
 IDA 7.4 于 2019 年 10 月发布。此版本提供对 Python 3 的支持。发布后，IDA 7.4 支持 Python 2 和 Python 3，但随着 Python 2.x 的生命周期结束，未来版本将不再支持它。由于主机可以安装多个版本的 Python，因此 Hex-Rays 提供了一个名为 `idapyswitch` 的工具，位于 `IDADIR\idapyswitch.exe`。执行后，该工具会枚举所有可用的 Python 版本，并允许用户选择他们想要使用的 Python 版本。
 
-[^3]: https://www.hex-rays.com/products/ida/7.0/docs/idapython_backward_compat_695.shtml
-
 ## Python-x86_64 问题
 
-从 IDA 6.9 升级到较新版本时，一些常见问题是在执行依赖于非标准模块的旧脚本时。以前安装的模块（例如 pefile[^4]）需要从 x86 升级到 x86_64 才能在 IDA 中使用。更新它们的最简单方法是执行以下命令 `C:\>python%version%\python.exe -m pip install <package>`。从 IDA 输出窗口执行 `import sys; print(sys.path)` 可以用来定位 IDA 正在使用的 Python 版本的文件夹路径。截至 2020 年 4 月，使用 Python 3.8 和 3.81 安装 IDAPython 时存在安装问题。要解决此问题，请参阅 Hex-Rays 博客文章“IDA 7.4 和 Python 3.8”[^5]。
+从 IDA 6.9 升级到较新版本时，一些常见问题是在执行依赖于非标准模块的旧脚本时。以前安装的模块（例如 [pefile](https://github.com/erocarrera/pefile) ）需要从 x86 升级到 x86_64 才能在 IDA 中使用。更新它们的最简单方法是执行以下命令 `C:\>python%version%\python.exe -m pip install <package>`。从 IDA 输出窗口执行 `import sys; print(sys.path)` 可以用来定位 IDA 正在使用的 Python 版本的文件夹路径。截至 2020 年 4 月，使用 Python 3.8 和 3.81 安装 IDAPython 时存在安装问题。要解决此问题，请参阅 Hex-Rays 博客文章 [IDA 7.4 和 Python 3.8](https://www.hex-rays.com/blog/ida-7-4-and-python-3-8/)。
 
 对于许多用户来说，使用函数 `hex` 打印地址是一种常见做法。升级到 IDA 7+ 后，使用 `hex` 打印地址的用户将不再拥有可点击的地址。地址类型现在是 `long` 而不是 `int`。如果您需要打印的地址可点击，请使用字符串格式化。下面的第一个打印地址是 `long` 且不可点击。使用字符串格式化打印的地址是可点击的。
 
@@ -154,9 +153,6 @@ Python> print(hex(ea)) # 打印不可点击的地址
 Python> print("0x%x" % ea) # 打印可点击的地址
 0x407e3b
 ```
-
-[^4]: https://github.com/erocarrera/pefile
-[^5]: https://www.hex-rays.com/blog/ida-7-4-and-python-3-8/
 
 ## 基础知识
 
@@ -270,7 +266,7 @@ Python>
 
 `idautils.Functions()` 返回已知函数的列表。该列表包含每个函数的起始地址。`idautils.Functions()` 可以传递参数以在范围内搜索。如果我们想这样做，我们将传递起始和结束地址 `idautils.Functions(start_addr, end_addr)`。要获取函数名，我们使用 `idc.get_func_name(ea)`。`ea` 可以是函数边界内的任何地址。IDAPython 包含大量用于处理函数的 API。让我们从一个简单的函数开始。此函数的语义并不重要，但我们应该记下地址。
 
-```asm
+```
 .text:0045C7C3 sub_45C7C3 proc near
 .text:0045C7C3         mov eax, [ebp-60h]
 .text:0045C7C6         push eax ; void
@@ -471,7 +467,7 @@ Python> idc.add_func(0x00407DC1, 0x00407E90)
 
 ### 提取函数参数
 
-在 IDAPython 中提取函数参数并不总是一件简单直接的任务。在许多情况下，需要识别函数的调用约定，并且必须使用回溯或其他类似技术手动解析参数。由于调用约定[^6] 种类繁多，通常无法通用地实现此功能。IDAPython 确实包含一个名为 `idaapi.get_arg_addrs(ea)` 的函数，如果 IDA 能够识别被调用函数的原型，则可以使用该函数获取参数的地址。这种识别并不总是存在，但在调用 API 或 64 位代码中很常见。例如，在以下汇编中，我们可以看到 API `SendMessage` 传递了四个参数。
+在 IDAPython 中提取函数参数并不总是一件简单直接的任务。在许多情况下，需要识别函数的调用约定，并且必须使用回溯或其他类似技术手动解析参数。由于[调用约定](https://www.agner.org/optimize/calling_conventions.pdf) 种类繁多，通常无法通用地实现此功能。IDAPython 确实包含一个名为 `idaapi.get_arg_addrs(ea)` 的函数，如果 IDA 能够识别被调用函数的原型，则可以使用该函数获取参数的地址。这种识别并不总是存在，但在调用 API 或 64 位代码中很常见。例如，在以下汇编中，我们可以看到 API `SendMessage` 传递了四个参数。
 
 ```
 .text:000000014001B5FF         js      loc_14001B72B
@@ -490,8 +486,6 @@ Python> ea = 0x00014001B617
 Python> idaapi.get_arg_addrs(ea)
 [0x14001b605, 0x14001b612, 0x14001b60f, 0x14001b60c]
 ```
-
-[^6]: https://www.agner.org/optimize/calling_conventions.pdf
 
 ## 指令
 
@@ -852,7 +846,7 @@ ID 为 1 的基本块是一个循环，这就是为什么它有多个后继和�
 
 ## 结构体
 
-结构体布局、结构体名称和类型在编译过程中会从代码中移除。重建结构体并正确标记成员名称可以极大地帮助逆向过程。以下是在 x86 shellcode 中常见的汇编片段[^7]。完整的代码遍历线程环境块 (TEB) 和进程环境块 (PEB) 中的结构体以查找 `kernel32.dll` 的基地址。
+结构体布局、结构体名称和类型在编译过程中会从代码中移除。重建结构体并正确标记成员名称可以极大地帮助逆向过程。以下是在 x86 shellcode 中 [常见的汇编片段](https://gist.github.com/tophertimzen/5d32f255292a0201853cb7009fc55fba) 。完整的代码遍历线程环境块 (TEB) 和进程环境块 (PEB) 中的结构体以查找 `kernel32.dll` 的基地址。
 
 ```
 seg000:00000000 xor     ecx, ecx
@@ -861,7 +855,7 @@ seg000:00000006 mov     eax, [eax+0Ch]
 seg000:00000009 mov     eax, [eax+14h]
 ```
 
-通常观察到的下一步是遍历可移植可执行文件格式以查找 Windows API。这种技术最早由 The Last Stage of Delirium 在他们 2002 年的论文《Win32 Assembly Components》[^8] 中记录。由于解析了所有不同的结构体，除非标记了结构体偏移量，否则很容易迷失方向。如下面的代码所示，即使标记了几个结构体也会很有帮助。
+通常观察到的下一步是遍历可移植可执行文件格式以查找 Windows API。这种技术最早由 The Last Stage of Delirium 在他们 2002 年的论文[《Win32 Assembly Components》](http://www.lsd-pl.net/winasm.pdf) 中记录。由于解析了所有不同的结构体，除非标记了结构体偏移量，否则很容易迷失方向。如下面的代码所示，即使标记了几个结构体也会很有帮助。
 
 ```
 seg000:00000000 xor     ecx, ecx
@@ -870,9 +864,6 @@ seg000:00000006 mov     eax, [eax+PEB.Ldr]
 seg000:00000009 mov     eax, [eax+PEB_LDR_DATA.InMemoryOrderModuleList.Flink]
 seg000:0000000C mov     eax, [eax+ecx]
 ```
-
-[^7]: https://gist.github.com/tophertimzen/5d32f255292a0201853cb7009fc55fba
-[^8]: http://www.lsd-pl.net/winasm.pdf
 
 我们可以使用以下代码将偏移量标记为它们对应的结构体名称。
 
@@ -910,10 +901,6 @@ if status:
     # Apply PEB_LDR_DATA offset
     peb_ldr_data_id = idc.get_struc_id("PEB_LDR_DATA") # Get PEB_LDR_DATA structure ID
     if peb_ldr_data_id != idc.BADADDR:
-         # Operand 1 ([eax+14h]), delta 0. Need member offset for Flink.
-         # This requires knowing the offset of InMemoryOrderModuleList.Flink within PEB_LDR_DATA.
-         # Let's assume the base offset 0x14 targets the Flink directly for simplicity here.
-         # A more robust solution would get the member offset first.
          idc.op_stroff(ea, 1, peb_ldr_data_id, 0)
 ```
 
@@ -1025,14 +1012,13 @@ seg000:00000034 		call    eax             ; CreateThread
 
 值 `0xCA2BD06B` 是 `CreateThread` 的哈希值。哈希是通过循环遍历每个字符，使用 `ROR` 将字节的位移位 13 位，并存储结果来创建哈希值。这种技术通常被称为 z0mbie 哈希或 ROR-13。由于哈希在某种程度上是 `CreateThread` 的符号名称，因此它是何时使用枚举的实际示例。
 
-既然我们已经知道哈希值 `0xCA2BD06B` 是字符串 `"CreateThread"`，我们就可以创建枚举。如果我们不知道哈希代表哪个 API 名称怎么办？那么我们就需要某种方法来哈希某个 Windows DLL 中的所有导出符号名称。为简洁起见，我们可以作弊并说 DLL 是 `kernel32.dll`。要从 `kernel32.dll` 导出符号名称，我们可以使用 pefile。请参阅附录以获取有关使用 pefile 的最常见用例的简短示例。然后我们需要一种方法来复制哈希算法。对于下面的代码，我们将使用 Rolf Rolles（请参阅“下一步是什么”部分）实现的 z0mbie 哈希和 pefile 的修改版本[^9]。该代码的设计使其可以由读者轻松修改以匹配任何哈希或添加所有哈希。
+既然我们已经知道哈希值 `0xCA2BD06B` 是字符串 `"CreateThread"`，我们就可以创建枚举。如果我们不知道哈希代表哪个 API 名称怎么办？那么我们就需要某种方法来哈希某个 Windows DLL 中的所有导出符号名称。为简洁起见，我们可以作弊并说 DLL 是 `kernel32.dll`。要从 `kernel32.dll` 导出符号名称，我们可以使用 pefile。请参阅附录以获取有关使用 pefile 的最常见用例的简短示例。然后我们需要一种方法来复制哈希算法。对于下面的代码，我们将使用 Rolf Rolles（请参阅“下一步是什么”部分）实现的 z0mbie 哈希和 pefile 的 [修改版本](http://www.openrce.org/blog/view/681/Shellcode_Analysis) 。该代码的设计使其可以由读者轻松修改以匹配任何哈希或添加所有哈希。
 
-[^9]: http://www.openrce.org/blog/view/681/Shellcode_Analysis
 
 ```python
 import pefile
-import idc         # Need idc for enum functions
-import idaapi      # Need idaapi for hexflag
+import idc        
+import idaapi      
 
 def ror32(val, amt):
     amt &= 31 # Ensure amt is within 0-31 range for 32-bit rotate
@@ -1086,16 +1072,15 @@ if api_name:
         print(f"Failed to create enum '{enum_name}'")
 else:
     print(f"Could not find API name for hash {target_hash:#x} in {dll_path}")
-
 ```
 
 第一行将 `pefile` 导入 IDA。两个函数 `ror32` 和 `add32` 负责复制 ROR 指令。函数 `z0mbie_hash(name)` 接受要哈希的字符串的单个参数并返回哈希值。最后一个函数 `get_name_from_hash(file_path, hash)` 接受两个参数。第一个参数是要哈希符号的 DLL 的文件路径。第二个参数是我们正在搜索的名称。该函数返回字符串名称。此函数中的第一行调用 `pefile.PE(file_path)`来加载并解析`kernel32.dll`。pefile PE 实例保存在变量 `pe`中。DLL 中的每个符号都通过循环遍历`pe.DIRECTORY_ENTRY_EXPORT.symbols`中的每一项来进行迭代。该字段包含 DLL 中每个导出符号的名称、地址和其他属性。符号名称通过调用`z0mbie_hash(exp.name)`进行哈希，然后进行比较。如果匹配，则返回符号名称并将其分配给`api_name`。此时，在代码中完成枚举的创建和添加。添加枚举的第一步是创建枚举 id。这是通过调用 `idc.add_enum(idx, name, flag)`来完成的。第一个参数是`idx`或新枚举的序列号。值 -1 分配下一个可用的 id。第二个参数是枚举的名称。最后一个参数是标志，即`idaapi.hexflag()`。执行代码后，如果我们在 IDA 中高亮显示值 `0xCA2BD06B` 时按下快捷键 `M`，我们会看到字符串 `CreateThread` 作为符号常量选项。以下代码是我们之前看到的带有哈希现在是符号常量的代码。
-
+```
 seg000:00000015 mov [ebp-4], ebx
 seg000:00000018 push CreateThread ; ROR 13 hash of CreateThread
 seg000:0000001D push dword ptr [ebp-4]
+```
 
-````
 
 ## 交叉引用 (Xrefs)
 
@@ -2000,9 +1985,8 @@ Python>"0x%x" % idc.get_color(0x0401469, idc.CIC_SEGM)
 0xffffffff
 ```
 
-十六进制颜色代码 `0xffffffff` 是 IDA 使用的默认颜色代码。如果您有兴趣更改 IDA 的颜色主题，我建议查看 IDASkins[^11] 项目。
+十六进制颜色代码 `0xffffffff` 是 IDA 使用的默认颜色代码。如果您有兴趣更改 IDA 的颜色主题，我建议查看 [IDASkins](https://github.com/zyantific/IDASkins) 项目。
 
-[^11]: https://github.com/zyantific/IDASkins
 
 ## 访问原始数据
 
@@ -2228,11 +2212,10 @@ len:   0x21
 
 ## PyQt
 
-本书中记录的大多数与 IDAPython 的交互都是通过命令行进行的。在某些情况下，使用图形用户界面与我们的代码交互可能很有用，通常在 IDAPython 的文档中称为表单。IDA 的图形用户界面是用跨平台 Qt GUI 框架编写的。要与此框架交互，我们可以使用名为 PyQt[^12] 的 Qt Python 绑定。对 PyQt 的深入概述超出了本书的范围。本章提供的是一个简单的骨架片段，可以轻松修改并在此基础上构建以编写表单。该代码创建了两个小部件，第一个小部件创建一个表格，第二个小部件是一个按钮。单击按钮时，当前地址和助记符会添加到表格的一行中。如果单击该行，IDA 会在反汇编视图中跳转到该行中的地址。将此代码视为简单的地址书签标记。下图是添加三个地址后，通过单击“添加地址”按钮，然后双击第一行后的表单。
+本书中记录的大多数与 IDAPython 的交互都是通过命令行进行的。在某些情况下，使用图形用户界面与我们的代码交互可能很有用，通常在 IDAPython 的文档中称为表单。IDA 的图形用户界面是用跨平台 Qt GUI 框架编写的。要与此框架交互，我们可以使用名为 [PyQt](https://riverbankcomputing.com/software/pyqt/intro) 的 Qt Python 绑定。对 PyQt 的深入概述超出了本书的范围。本章提供的是一个简单的骨架片段，可以轻松修改并在此基础上构建以编写表单。该代码创建了两个小部件，第一个小部件创建一个表格，第二个小部件是一个按钮。单击按钮时，当前地址和助记符会添加到表格的一行中。如果单击该行，IDA 会在反汇编视图中跳转到该行中的地址。将此代码视为简单的地址书签标记。下图是添加三个地址后，通过单击“添加地址”按钮，然后双击第一行后的表单。
 
 ![跳转示例表单截图](assets/JumpAround.png)
 
-[^12]: https://riverbankcomputing.com/software/pyqt/intro
 
 以下代码中的并非所有 API 都会被涵盖。这种简洁的原因是 PyQt API 名称的描述性。例如，函数 `setColumnCount` 设置列数。如果某个 API 没有意义，请按名称搜索该 API。Qt 和 PyQt 的文档非常完善。一旦我们理解了下面代码的基础知识，就很容易将它们组合在一起。在查看以下代码时，要理解关于 PyQt 的关键概念是理解 PyQt 是一个面向对象的框架。
 
@@ -2512,6 +2495,7 @@ class YaraIDASearch:
 Python> ys = YaraIDASearch()
 Status: Loading memory for Yara.
 Status: Memory has been loaded.
+
 Python> example_rule = """rule md5_constant
 {
     strings:
@@ -2519,6 +2503,7 @@ Python> example_rule = """rule md5_constant
     condition:
         $hex_constant
 }"""
+
 Python>
 Python>ys.find_sig(example_rule)
 [4199976L]
@@ -2574,7 +2559,7 @@ Python>ys.find_sig(example_rule)
 - `UC_MODE_MIPS64`
   - Mips64 ISA
 
-**x86 / x64**
+**x86/x64**
 
 - `UC_MODE_16`
   - 16 位模式
@@ -2590,9 +2575,8 @@ Python>ys.find_sig(example_rule)
 - `UC_MODE_SPARC64`
   - 64 位模式
 
----
 
-架构和硬件类型有许多不同的组合。Unicorn Engine Python 绑定目录包含几个示例脚本<sup>17</sup>。所有示例都具有 `sample_*.py` 的模式。
+架构和硬件类型有许多不同的组合。Unicorn Engine Python 绑定目录包含几个[示例脚本](https://github.com/unicorn-engine/unicorn/tree/master/bindings/python)。所有示例都具有 `sample_*.py` 的模式。
 
 ### 读写内存
 
@@ -2608,7 +2592,7 @@ Python>ys.find_sig(example_rule)
 
 ### 读写寄存器
 
-可以通过调用 `uc.reg_read(reg_id, opt=None)` 来读取寄存器。`reg_id` 在 Python 绑定目录<sup>18</sup> 中相应的架构常量 Python 文件中定义。
+可以通过调用 `uc.reg_read(reg_id, opt=None)` 来读取寄存器。`reg_id` 在 [Python 绑定目录](https://github.com/unicorn-engine/unicorn/tree/master/bindings/python/unicorn) 中相应的架构常量 Python 文件中定义。
 
 - ARM-64 在 `arm64_const.py` 中
 - ARM 在 `arm_const.py` 中
@@ -2627,66 +2611,44 @@ Python>ys.find_sig(example_rule)
 
 Unicorn 引擎支持广泛的钩子。以下描述了这些钩子的一个子集。钩子在调用开始模拟之前插入。要添加钩子，使用 API `uc.hook_add(UC_HOOK_*, callback, user_data, begin, end, ...)`。前两个参数是必需的。后三个是可选的，通常填充为 `None`, `1`, `0` 的默认值。_(注意：UC_INS 可能指特定的指令 ID，但这里上下文似乎指默认参数值)_。要删除钩子，使用 API `emu.hook_del(hook)`。要删除钩子，必须将其分配给一个变量。例如，以下片段是如何删除钩子。
 
-```python
-# Assume 'emu' is the Unicorn instance (e.g., emu = Uc(...))
-# Assume hook_code is a defined callback function
+```python        
 i = emu.hook_add(UC_HOOK_CODE, hook_code, None)
 emu.hook_del(i)
 ```
 
-钩子及其相应的回调允许对模拟代码进行插桩。这些回调是我们应用逻辑进行分析、修改代码或简单打印值的地方。这些回调在调试错误或确保正确的初始化值时非常有用。下面的一些示例来自 Unicorn Engine 的示例仓库<sup>19</sup>。
+钩子及其相应的回调允许对模拟代码进行插桩。这些回调是我们应用逻辑进行分析、修改代码或简单打印值的地方。这些回调在调试错误或确保正确的初始化值时非常有用。下面的一些示例来自 Unicorn Engine 的[示例仓库](https://github.com/unicorn-engine/unicorn/blob/master/bindings/python/sample_x86.py)。
 
 #### UC_HOOK_INTR
 
 `UC_HOOK_INTR` 用于挂钩所有中断和系统调用事件。回调 `hook_intr` 的第一个参数是 Unicorn 实例。该实例可用于调用前面描述的 Unicorn API。第二个参数 `intno` 是中断号。第三个参数 `user_data` 是一个可以从钩子传递到回调的变量。以下示例打印中断号（如果不等于 0x80）并通过调用 `uc.emu_stop()` 停止模拟。
 
 ```python
-# Assume uc is the Unicorn instance and UC_HOOK_INTR is imported
 def hook_intr(uc, intno, user_data):
     # only handle Linux syscall interrupt (0x80) differently for example
     if intno != 0x80:
         print("got interrupt %x ???" % intno);
-        uc.emu_stop() # Stop emulation on unexpected interrupt
-    # For syscall (int 0x80), you might want to handle it or let it pass
-    # Returning False from a hook can stop emulation, True continues.
-    # The default behavior might depend on the hook type. Check Unicorn docs.
-    # return True # Explicitly continue if needed
+        uc.emu_stop()
+        return
 
-# Add the hook
 uc.hook_add(UC_HOOK_INTR, hook_intr)
 ```
 
-#### UC_HOOK_INSN
+#### `UC_HOOK_INSN`
 
 `UC_HOOK_INSN` 在执行 x86 指令 `IN`、`OUT` 或 `SYSCALL` 时添加一个钩子。以下片段添加了一个 `UC_HOOK_INSN`，并在执行 `UC_X86_INS_SYSCALL` 时调用回调函数 `hook_syscall`。回调读取 RAX 寄存器，如果 RAX 等于 0x100，则将其修补为 0x200，并且 Unicorn 引擎继续模拟代码。
 
 ```python
-# Assume uc, UC_HOOK_INSN, UC_X86_REG_RAX, UC_X86_INS_SYSCALL are imported/defined
 def hook_syscall(uc, user_data):
     rax = uc.reg_read(UC_X86_REG_RAX)
     if rax == 0x100:
         print("Intercepted syscall with RAX=0x100, modifying to 0x200")
         uc.reg_write(UC_X86_REG_RAX, 0x200)
-    # Return True to continue emulation after the hook
-    # return True
 
-# Add the hook specifically for the SYSCALL instruction
-# Arguments: hook type, callback, user_data, begin_addr, end_addr, instruction_id
 uc.hook_add(UC_HOOK_INSN, hook_syscall, None, 1, 0, UC_X86_INS_SYSCALL)
 ```
 
-````markdown
-```python
-# (Continuing from previous hook_syscall definition)
-    rax = uc.reg_read(UC_X86_REG_RAX)
-    if rax == 0x100:
-        uc.reg_write(UC_X86_REG_RAX, 0x200)
-# Hook added on previous page
-# uc.hook_add(UC_HOOK_INSN, hook_syscall, None, 1, 0, UC_X86_INS_SYSCALL)
-```
-````
 
-#### UC_HOOK_CODE
+#### `UC_HOOK_CODE`
 
 `UC_HOOK_CODE` 可以挂钩一段代码。在每条指令执行之前调用钩子。回调 `hook_code` 包含四个参数。以下片段实现了 `UC_HOOK_CODE` 钩子，并打印正在模拟的地址和大小。第一个参数 `uc` 是 Unicorn 实例，`address` 是要执行的代码的地址，`size` 是模拟指令的大小，`user_data` 已在前面介绍过。
 
@@ -2694,11 +2656,10 @@ uc.hook_add(UC_HOOK_INSN, hook_syscall, None, 1, 0, UC_X86_INS_SYSCALL)
 def hook_code(uc, address, size, user_data):
     print("Tracing instruction at 0x%x, instruction size = 0x%x" % (address, size))
 
-# Add the hook
-# uc.hook_add(UC_HOOK_CODE, hook_code) # Assuming uc is defined
+uc.hook_add(UC_HOOK_CODE, hook_code)
 ```
 
-#### UC_HOOK_BLOCK
+#### `UC_HOOK_BLOCK`
 
 `UC_HOOK_BLOCK` 是一个可以实现用于跟踪基本块的回调的钩子。参数与 `UC_HOOK_CODE` 中描述的相同。
 
@@ -2706,17 +2667,16 @@ def hook_code(uc, address, size, user_data):
 def hook_block(uc, address, size, user_data):
     print("Tracing basic block at 0x%x, block size = 0x%x" % (address, size))
 
-# Add the hook
-# uc.hook_add(UC_HOOK_BLOCK, hook_block) # Assuming uc is defined
+
+uc.hook_add(UC_HOOK_BLOCK, hook_block)
 ```
 
-#### UC*HOOK_MEM*\*
+#### `UC_HOOK_MEM_*`
 
 Unicorn 引擎有一些专门用于读取、获取、写入和访问内存的钩子。它们都以 `UC_HOOK_MEM_*` 开头。它们的回调都具有如下所示的相同参数。
 
 ```python
 def hook_mem_example(uc, access, address, size, value, user_data):
-    # This is a generic template; specific hooks might not use all args (e.g., read doesn't use value)
     pass
 ```
 
@@ -2730,11 +2690,6 @@ UC_MEM_READ_UNMAPPED = 19
 UC_MEM_WRITE_UNMAPPED = 20
 UC_MEM_FETCH_UNMAPPED = 21
 UC_MEM_WRITE_PROT = 22
-```
-
----
-
-```
 UC_MEM_READ_PROT = 23
 UC_MEM_FETCH_PROT = 24
 UC_MEM_READ_AFTER = 25
@@ -2745,53 +2700,32 @@ UC_MEM_READ_AFTER = 25
 `UC_HOOK_MEM_INVALID` 的示例代码包含一个比较访问错误的示例。当发生无效内存访问时，执行回调 `hook_mem_invalid`。
 
 ```python
-# Assumes necessary Unicorn constants are imported (UC_MEM_*, UC_X86_REG_EIP, etc.)
 def hook_mem_invalid(uc, access, address, size, value, user_data):
-    # Get the instruction pointer at the time of the fault
-    # This might need adjustment for x64 (RIP vs EIP)
-    try:
-         eip = uc.reg_read(UC_X86_REG_EIP) # Assuming x86_32, adjust for other archs
-    except: # Handle potential errors reading register if context is bad
-         eip = "N/A"
-
-    print(f"INVALID MEMORY ACCESS:")
-    print(f"  Type: {access}") # Access type (e.g., UC_MEM_WRITE)
-    print(f"  Address: 0x{address:x}")
-    print(f"  Size: {size}")
-    print(f"  Value: 0x{value:x}" if access == UC_MEM_WRITE else "N/A") # Value only relevant on write
-    print(f"  EIP/RIP: 0x{eip:x}" if isinstance(eip, int) else eip)
-
-    # Example detailed messages based on access type
+    eip = uc.reg_read(UC_X86_REG_EIP)
     if access == UC_MEM_WRITE:
-        print(f"  => invalid WRITE of 0x{value:x} to 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_READ:
-        print(f"  => invalid READ from 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_FETCH:
-         print(f"  => invalid FETCH from 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_READ_UNMAPPED:
-        print(f"  => READ from UNMAPPED memory 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_WRITE_UNMAPPED:
-         print(f"  => WRITE to UNMAPPED memory 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_FETCH_UNMAPPED:
-         print(f"  => FETCH from UNMAPPED memory 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_WRITE_PROT:
-         print(f"  => WRITE to PROTECTED memory 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    elif access == UC_MEM_FETCH_PROT:
-         print(f"  => FETCH from PROTECTED memory 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-    # Note: The original code had duplicate FETCH_PROT checks. Removed one.
-    elif access == UC_MEM_READ_AFTER:
-         # This hook type usually signifies successful read, not error.
-         # Keeping it here based on OCR, but its placement under "invalid" is odd.
-         print(f"  => READ_AFTER event for 0x{address:x} (size {size}) at EIP 0x{eip:x}")
-
-    # Returning False typically stops emulation upon error
+        print("invalid WRITE of 0x%x at 0x%X, data size = %u, data value = 0x%x" % (address, eip, size, value))
+    if access == UC_MEM_READ:
+        print("invalid READ of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_FETCH:
+        print("UC_MEM_FETCH of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_READ_UNMAPPED:
+        print("UC_MEM_READ_UNMAPPED of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_WRITE_UNMAPPED:
+        print("UC_MEM_WRITE_UNMAPPED of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_FETCH_UNMAPPED:
+        print("UC_MEM_FETCH_UNMAPPED of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_WRITE_PROT:
+        print("UC_MEM_WRITE_PROT of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_FETCH_PROT:
+        print("UC_MEM_FETCH_PROT of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_FETCH_PROT:
+        print("UC_MEM_FETCH_PROT of 0x%x at 0x%X, data size = %u" % (address, eip, size))
+    if access == UC_MEM_READ_AFTER:
+        print("UC_MEM_READ_AFTER of 0x%x at 0x%X, data size = %u" % (address, eip, size))
     return False
 
-# Add the hook
-# uc.hook_add(UC_HOOK_MEM_INVALID, hook_mem_invalid) # Assuming uc is defined
+uc.hook_add(UC_HOOK_MEM_INVALID, hook_mem_invalid)
 ```
-
----
 
 #### UC_HOOK_MEM_READ_UNMAPPED
 
@@ -2799,12 +2733,8 @@ def hook_mem_invalid(uc, access, address, size, value, user_data):
 
 ```python
 def hook_mem_read_unmapped(uc, access, address, size, value, user_data):
-    print(f"Attempted READ from UNMAPPED memory at 0x{address:x}, size {size}")
-    # Typically return False to stop emulation or True to attempt to continue (might crash)
-    return False # Example: stop on error
-
-# Add the hook
-# uc.hook_add(UC_HOOK_MEM_READ_UNMAPPED, hook_mem_read_unmapped, None) # Assuming uc defined
+    pass
+uc.hook_add(UC_HOOK_MEM_READ_UNMAPPED, hook_mem_read_unmapped, None)
 ```
 
 以下是其他内存钩子的列表，描述最少。前面的示例片段可以修改为使用下面的钩子。
@@ -2822,7 +2752,7 @@ def hook_mem_read_unmapped(uc, access, address, size, value, user_data):
 - `UC_HOOK_MEM_READ`
   - 在发生内存读取事件时执行回调。
 - `UC_HOOK_MEM_WRITE`
-  - 在发生内存写入事件时执行回调。 _(原文有引号错误)_
+  - 在发生内存写入事件时执行回调。
 - `UC_HOOK_MEM_FETCH`
   - 在发生内存获取执行事件时执行回调。
 - `UC_HOOK_MEM_READ_AFTER`
@@ -2831,257 +2761,120 @@ def hook_mem_read_unmapped(uc, access, address, size, value, user_data):
 现在我们了解了 Unicorn 引擎的工作原理，我们在 IDA 的上下文中使用它。下面的汇编通过调用 `malloc` 分配内存，复制加密字符串的偏移量，然后用密钥对字符串的每个字节进行 XOR，并将结果存储在分配的内存中。
 
 ```
-.text:00401034 push    esi
-.text:00401035 push    edi
-.text:00401036 push    0Ah             ; Size
-.text:00401038 call    ds:malloc
-.text:0040103E mov     esi, eax
-.text:00401040 mov     edi, offset str_encrypted
-.text:00401045 xor     eax, eax        ; eax = 0
-.text:00401047 sub     edi, esi
-.text:00401049 pop     ecx
-```
-
----
-
-```
-.text:0040104A
-.text:0040104A loop:                   ; CODE XREF: _main+28↓j
-.text:0040104A lea     edx, [eax+esi]
-.text:0040104D mov     cl, [edi+edx]
-.text:00401050 xor     cl, ds:b_key    ; Assume b_key is the XOR key location
-.text:00401056 inc     eax
-.text:00401057 mov     [edx], cl
-.text:00401059 cmp     eax, 9          ; index (Assuming string length 9+null = 0xA)
-.text:0040105C jb      short loop
-.text:0040105E push    esi
+.text:00401034 		push    esi
+.text:00401035 		push    edi
+.text:00401036 		push    0Ah             ; Size
+.text:00401038 		call    ds:malloc
+.text:0040103E 		mov     esi, eax
+.text:00401040 		mov     edi, offset str_encrypted
+.text:00401045 		xor     eax, eax        ; eax = 0
+.text:00401047 		sub     edi, esi
+.text:00401049 		pop     ecx
+.text:0040104A		
+.text:0040104A 		loop:                   ; CODE XREF: _main+28↓j
+.text:0040104A 		lea     edx, [eax+esi]
+.text:0040104D 		mov     cl, [edi+edx]
+.text:00401050 		xor     cl, ds:b_key    ; Assume b_key is the XOR key location
+.text:00401056 		inc     eax
+.text:00401057 		mov     [edx], cl
+.text:00401059 		cmp     eax, 9          ; index (Assuming string length 9+null = 0xA)
+.text:0040105C 		jb      short loop
+.text:0040105E 		push    esi
 ```
 
 上面的代码很简单，但在模拟代码时必须考虑几个细微差别。第一个问题是在偏移量 `0x0401038` 处调用 `malloc`。Unicorn 引擎模拟指令，就好像它是一个 CPU 处理器，而不是操作系统的模拟器。它不像 Windows 加载程序那样工作。它不会为可执行文件初始化内存，因此它可以执行。内存映射、动态链接库的加载或导入表的填充不由 Unicorn 引擎处理。如果代码是自包含的，并且因此不依赖于操作系统填充的内存结构（例如进程环境块），则它可以执行位置无关代码。如果成功执行需要这些属性，则需要手动创建和映射这些属性，或者通过钩子和回调手动处理。第二个问题是在偏移量 `0x0401040` 处移动加密字符串的偏移量。字符串的偏移量位于虚拟偏移量 `0x0402108`。如果可执行文件中的代码被视为原始数据而没有内存映射，则执行的偏移量将是 `0x440`，但尝试读取虚拟地址将返回无效内存读取，因为内存尚未映射。当可执行文件或 IDA 的 IDB 中的可执行数据被执行时，需要映射到正确的地址。最后一个问题是只执行 XOR 循环而忽略其他代码和异常。以下代码假定用户已高亮显示了从 `0x401034` 到 `0x40105e` 的汇编。
 
 ```python
 from unicorn import *
-from unicorn.x86_const import * # Import necessary constants
+from unicorn.x86_const import *
 import idautils
-import idc
-import idaapi
 import math
 
-# Virtual memory address allocated by our custom malloc hook
-VIRT_MEM = 0x4000 # Example address, choose something suitable
+VIRT_MEM = 0x4000
 
 def roundup(x):
-    """Rounds up to the nearest multiple of 1024."""
     return int(math.ceil(x / 1024.0)) * 1024
 
+
 def hook_mem_invalid(uc, access, address, size, value, user_data):
-    """Handles invalid memory access, specifically intercepts malloc calls."""
-    eip = 0
-    is_x86 = False
-    try:
-        # Check architecture to read the correct instruction pointer
-        if uc.query(UC_QUERY_ARCH) == UC_ARCH_X86:
-            is_x86 = True
-            if uc.query(UC_QUERY_MODE) == UC_MODE_32:
-                eip = uc.reg_read(UC_X86_REG_EIP)
-            else: # UC_MODE_64
-                eip = uc.reg_read(UC_X86_REG_RIP)
-        # Add checks for other architectures if needed
-    except UcError as e:
-        print(f"Error reading instruction pointer: {e}")
-        return False # Stop emulation on error
-
-    # Read the first 2 bytes at EIP/RIP to check if it's a common call pattern (e.g., FF 15)
-    try:
-        call_bytes = uc.mem_read(eip, 2)
-    except UcError: # Handle case where EIP itself is invalid
-         print(f"Failed to read memory at EIP/RIP: 0x{eip:x}")
-         return False
-
-    # Check for common indirect call pattern (FF 15 for x86, potentially others for x64)
-    # This is a basic check and might need refinement
-    if call_bytes != b"\xFF\x15": # Example for x86 indirect call dword ptr [...]
-        print(f"Invalid memory access at 0x{eip:x} not recognized as targeted call.")
-        return False # Stop emulation for other invalid accesses
-
-    # Get the name of the function being called (address is the target of the indirect call)
-    func_name = idc.get_name(address) # address from hook args is the memory location being accessed (the IAT entry)
-
-    if func_name == "malloc": # Check if it's the malloc function we want to hook
-        print(f"Intercepted call to malloc at 0x{eip:x} accessing IAT at 0x{address:x}")
-        # Allocate our virtual memory block
-        try:
-            uc.mem_map(VIRT_MEM, 8 * 1024) # Map 8KB for the allocation
-            print(f"Mapped memory for malloc at 0x{VIRT_MEM:x}")
-        except UcError as e:
-            print(f"Error mapping memory for malloc: {e}")
-            return False # Stop if mapping fails
-
-        # Write the allocated address (VIRT_MEM) into the return register (EAX/RAX)
-        # And advance the instruction pointer past the call instruction
-        try:
-            if is_x86:
-                 if uc.query(UC_QUERY_MODE) == UC_MODE_32:
-                    uc.reg_write(UC_X86_REG_EAX, VIRT_MEM)
-                    uc.reg_write(UC_X86_REG_EIP, eip + 6) # Advance past 'call ds:...' (typically 6 bytes)
-                 else: # 64-bit
-                    uc.reg_write(UC_X86_REG_RAX, VIRT_MEM)
-                    uc.reg_write(UC_X86_REG_RIP, eip + 6) # Adjust instruction length if needed for x64
-            # Add logic for other architectures if necessary
-            print(f"Malloc handled. Returning 0x{VIRT_MEM:x}. Resuming at 0x{eip+6:x}.")
-            return True # Continue emulation after handling malloc
-        except UcError as e:
-             print(f"Error setting registers after malloc hook: {e}")
-             return False
+    if uc._arch == UC_ARCH_X86:
+        eip = uc.reg_read(UC_X86_REG_EIP)
     else:
-        # If it's an invalid access not related to our targeted malloc call
-        print(f"Unhandled invalid memory access to {func_name} at 0x{eip:x}")
-        return False # Stop emulation
+        eip = uc.reg_read(UC_X86_REG_RIP)
+    bb = uc.mem_read(eip, 2)
+    if bb != b"\xFF\x15":
+        return
+    if idc.get_name(address) == "malloc":
+        uc.mem_map(VIRT_MEM, 8 * 1024)
+    if uc._arch == UC_ARCH_X86:
+        uc.reg_write(UC_X86_REG_EAX, VIRT_MEM)
+        cur_addr = uc.reg_read(UC_X86_REG_EIP)
+        uc.reg_write(UC_X86_REG_EIP, cur_addr + 6)
+    else:
+        cur_addr = uc.reg_read(UC_X86_REG_RIP)
+        uc.reg_write(UC_X86_REG_RIP, cur_addr + 6)
+
 
 def hook_code(uc, address, size, user_data):
-    """Callback for tracing every instruction."""
-    # Keep this simple for demonstration, avoid too much overhead
-    # print('Tracing instruction at 0x%x, instruction size = 0x%x' % (address, size))
-    pass # Commented out print for less verbose output during main run
+    """For Debugging Use Only"""
+    print('Tracing instruction at 0x%x, instruction size = 0x%x' % (address, size))
+
 
 def emulate():
-    """Main function to set up and run the emulation."""
-    mu = None # Initialize mu to None
     try:
-        # --- Setup ---
-        # Get segment information
+        # get segment start and end address
         segments = []
-        for seg_ea in idautils.Segments():
-            seg_start = idc.get_segm_start(seg_ea)
-            seg_end = idc.get_segm_end(seg_ea)
-            segments.append((seg_start, seg_end))
-
-        # Get image base address
+        for seg in idautils.Segments():
+            segments.append((idc.get_segm_start(seg), idc.get_segm_end(seg)))
+ 
+        # get base address
         BASE_ADDRESS = idaapi.get_imagebase()
-
-        # Get IDB architecture info
+        # get bit
         info = idaapi.get_inf_structure()
-
-        # Initialize Unicorn based on architecture
         if info.is_64bit():
-            print("Initializing Unicorn for X86-64")
             mu = Uc(UC_ARCH_X86, UC_MODE_64)
         elif info.is_32bit():
-            print("Initializing Unicorn for X86-32")
             mu = Uc(UC_ARCH_X86, UC_MODE_32)
-        else:
-             print("ERROR: Unsupported architecture.")
-             return None
 
-        # Map memory for the executable's image base + surrounding area
-        # Map a larger region to be safe, e.g., 8MB centered around image base if possible
-        # Adjust mapping size and address based on actual executable layout
-        # Map from BASE_ADDRESS - 0x1000 up to a reasonable upper limit
-        # We need to map enough space to cover all segments and potential stack/heap
-        MEM_MAP_SIZE = 8 * 1024 * 1024 # 8MB example
-        # Ensure mapping starts on a page boundary if required by the OS/arch
-        map_start = BASE_ADDRESS & ~0xFFF # Align down to page boundary
-        print(f"Mapping main memory from 0x{map_start:x} size 0x{MEM_MAP_SIZE:x}")
-        mu.mem_map(map_start, MEM_MAP_SIZE)
+        # map 8MB memory for this emulation
+        mu.mem_map(BASE_ADDRESS - 0x1000, 8 * 1024 * 1024)
+        # write segments to memory
+        for seg in segments:
+            temp_seg = idc.get_bytes(seg[0], seg[1] - seg[0])
+            mu.mem_write(seg[0], temp_seg)
 
-        # Write segments to mapped memory
-        print("Writing segments to memory...")
-        for seg_start, seg_end in segments:
-            seg_size = seg_end - seg_start
-            if seg_size > 0:
-                print(f"  Writing segment 0x{seg_start:x} - 0x{seg_end:x} (size 0x{seg_size:x})")
-                seg_bytes = idc.get_bytes(seg_start, seg_size)
-                if seg_bytes:
-                     mu.mem_write(seg_start, seg_bytes)
-                else:
-                     print(f"  Warning: Failed to read segment bytes for 0x{seg_start:x}")
-
-        # Initialize stack
-        print("Initializing stack...")
-        stack_size = 1024 * 1024 # 1MB stack
-        # Find a suitable location for the stack, e.g., below the image base or a high address
-        # This needs careful consideration based on the target architecture and memory layout
-        # Example: Place stack below the main mapped area if possible, ensuring alignment
-        stack_base_aligned = (map_start - stack_size) & ~0xF # Align stack base (e.g., 16-byte)
-        stack_top = stack_base_aligned + stack_size
-        print(f"Mapping stack at 0x{stack_base_aligned:x} size 0x{stack_size:x}")
-        mu.mem_map(stack_base_aligned, stack_size)
-
-        # Set stack pointer (ESP/RSP) and base pointer (EBP/RBP)
-        # Point SP to the top of the mapped stack region
+        # initialize stack
+        stack_size = 1024 * 1024
         if info.is_64bit():
-            mu.reg_write(UC_X86_REG_RSP, stack_top)
-            mu.reg_write(UC_X86_REG_RBP, stack_top) # Often initialized same as RSP or 0
+            stack_base = roundup(seg[1])
+            mu.reg_write(UC_X86_REG_RSP, stack_base + stack_size - 0x1000)
+            mu.reg_write(UC_X86_REG_RBP, stack_base + stack_size)
         elif info.is_32bit():
-            mu.reg_write(UC_X86_REG_ESP, stack_top)
-            mu.reg_write(UC_X86_REG_EBP, stack_top)
+            stack_base = roundup(seg[1])
+            mu.reg_write(UC_X86_REG_ESP, stack_base + stack_size - 0x1000)
+            mu.reg_write(UC_X86_REG_EBP, stack_base + stack_size)
 
-        # Write null bytes to the stack (optional, good practice)
-        # mu.mem_write(stack_base_aligned, b"\x00" * stack_size)
+        # write null bytes to the stack
+        mu.mem_write(stack_base, b"\x00" * stack_size)
 
-        # Get selected address range from IDA
+        # get selected address range
         start = idc.read_selection_start()
-        end = idc.read_selection_end() # End address is exclusive in selection
+        end = idc.read_selection_end()
+        if start == idc.BADADDR:
+            return
 
-        if start == idc.BADADDR or start >= end:
-            print("ERROR: Invalid selection in IDA.")
-            return None
+        # add hook
+        mu.hook_add(UC_HOOK_MEM_READ, hook_mem_invalid)
+        mu.hook_add(UC_HOOK_CODE, hook_code)
 
-        print(f"Selected range: 0x{start:x} - 0x{end:x}")
-
-        # Add hooks
-        print("Adding hooks...")
-        # Hook for invalid memory access (specifically to handle malloc)
-        # Hook MEM_READ|MEM_WRITE|MEM_FETCH for invalid accesses targeting specific function pointers like malloc
-        # Hooking all invalid accesses might be too broad, focus on where problems occur
-        # Hooking UC_HOOK_MEM_READ on the specific IAT entry for malloc might be more targeted
-        # For simplicity, hook all invalid memory events first
-        mu.hook_add(UC_HOOK_MEM_INVALID, hook_mem_invalid)
-        # mu.hook_add(UC_HOOK_CODE, hook_code) # Uncomment for instruction tracing
-
-        # --- Emulation ---
-        print(f"Starting emulation from 0x{start:x} until 0x{end:x}")
-        mu.emu_start(start, end) # Emulate the selected range
-
-        # --- Post-Emulation ---
-        print("Emulation finished.")
-        # Read the result from the virtual memory location (where malloc returned)
-        # Assuming the result (XORed string) is 10 bytes long (0xA) based on cmp eax, 9
-        decoded_bytes = mu.mem_read(VIRT_MEM, 0xA)
-        print("Decoded result:")
-        print(decoded_bytes)
-        try:
-            # Attempt to decode as UTF-8 or another relevant encoding
-            print(decoded_bytes.decode('utf-8', errors='ignore'))
-        except:
-             pass # Ignore decoding errors if it's not valid text
-
+        mu.emu_start(start, end)
+        decoded = mu.mem_read(VIRT_MEM, 0x0A)
+        print(decoded)
     except UcError as e:
-        print("ERROR: Unicorn emulation failed: %s" % e)
-        return None # Return None on failure
-    except Exception as e:
-         print(f"ERROR: An unexpected error occurred: {e}")
-         return None
-    finally:
-         # Cleanup can be added here if necessary
-         pass
+        print("ERROR: %s" % e)
+        return None
+    return mu
 
-    return mu # Return the Unicorn instance
-
-# --- Execution ---
-# This part would typically be run in IDA's script window
-# result_mu = emulate()
-# if result_mu:
-#     print("Emulation successful.")
-# else:
-#     print("Emulation failed.")
-
-```
-
----
-
-```python
-# Execute the emulation
 emulate()
 ```
 
@@ -3090,35 +2883,14 @@ emulate()
 触发的第一个钩子是 `UC_HOOK_MEM_READ`，当 Unicorn 尝试读取应映射 `malloc` 的地址时发生。一旦钩子发生，就会执行回调函数 `hook_mem_invalid`。在此回调中，我们通过分配内存、将偏移量写入 EAX 或 RAX 然后返回来编写我们自己的自定义 `malloc`。要确定是写入 EAX 还是 RAX，我们可以通过将 `uc._arch` 与 `UC_ARCH_X86` 进行比较来检索存储在 Unicorn 实例中的架构。另一种选择是将 `info.is_32bit()` 的结果作为 `user_data` 中的可选参数传递。通过使用参数 `UC_X86_REG_EIP` 调用 `uc.reg_read(reg_id)` 来读取 EIP。接下来，我们通过使用第一个参数是存储在 EIP 中的偏移量，第二个参数是要读取的数据大小来调用 `uc.mem_read(int, size)` 来读取两个字节。将这两个字节与 `b"\xFF\x15"` 进行比较，以确保异常发生在 `call` 指令处。如果是 `call` 指令，则使用 `idc.get_name(ea)` 检索地址的名称，并检查 API 地址的名称是否为 `malloc`。如果是 `malloc`，则使用 `uc.mem_map(address, size)` 映射内存，然后我们将地址写入寄存器 EAX `uc.reg_write(UC_X86_REG_EAX, VIRT_MEM)`。要绕过内存异常，我们需要将 EIP 设置为 `malloc` 调用后的地址（`0x40103E`）。要写入 EIP，我们使用 `uc.reg_write(reg_id, value)`，其值为 EIP + 6 的地址。带有 `hook_code` 回调的第二个钩子 `UC_HOOK_CODE` 打印正在模拟的当前地址及其大小。下面是在 IDA 中运行的 Unicorn 模拟的输出。最后一行包含解密的字符串。
 
 ```
-Initializing Unicorn for X86-32 # Example output line
-Mapping main memory from 0x401000 size 0x800000 # Example output line
-Writing segments to memory... # Example output line
-  Writing segment 0x401000 - 0x401034 (size 0x34) # Example output line
-  ... (other segments) ...
-Initializing stack... # Example output line
-Mapping stack at 0x3ff000 size 0x100000 # Example output line
-Selected range: 0x401034 - 0x40105e # Example output line
-Adding hooks... # Example output line
-Starting emulation from 0x401034 until 0x40105e # Example output line
 Tracing instruction at 0x401034, instruction size = 0x1
 Tracing instruction at 0x401035, instruction size = 0x1
----
-```
-
-```
 Tracing instruction at 0x401036, instruction size = 0x2
-Intercepted call to malloc at 0x401038 accessing IAT at 0x... # Example hook_mem_invalid output
-Mapped memory for malloc at 0x4000 # Example hook_mem_invalid output
-Malloc handled. Returning 0x4000. Resuming at 0x40103e. # Example hook_mem_invalid output
-Tracing instruction at 0x40103e, instruction size = 0x2 # Example hook_code output (if enabled)
-...removed..
+..removed..
 Tracing instruction at 0x401059, instruction size = 0x3
 Tracing instruction at 0x40105c, instruction size = 0x2
 Tracing instruction at 0x40105e, instruction size = 0x1
-Emulation finished.
-Decoded result:
 bytearray(b'test mess\x00')
-test mess # Example decoded string output
 ```
 
 ## 调试
@@ -3129,48 +2901,56 @@ test mess # Example decoded string output
 
 如果你已经读到这里，那么你很有可能正在寻找一些可以学习的项目。你不妨看看 HexRays 和 IDAPython 源代码。
 
-**HexRays**
+### HexRays
 网站： https://www.hex-rays.com/
+
 博客： https://www.hex-rays.com/blog/
 
-**IDAPython 源代码**
+### IDAPython 源代码
 仓库： https://github.com/idapython/src
 
 以下是一个按姓氏字母顺序排列的个人列表，我建议阅读他们的项目。我个人认识或见过所有这些人，对他们的工作赞不绝口。
 
-**Tamir Bahar**
+### Tamir Bahar
 Twitter: @tmr232
+
 仓库： https://github.com/tmr232
 
-**Willi Ballenthin**
+### Willi Ballenthin
 Twitter: @williballenthin
+
 仓库： https://github.com/williballenthin
+
 博客： http://www.williballenthin.com/
 
-**Daniel Plohmann**
+### Daniel Plohmann
 Twitter: @push_pnx
-仓库： https://github.com/danielplohmann
+
+仓库： https://github.com/danielplohmann 
 https://bitbucket.org/daniel_plohmann/simplifire.idascope/
-博客： http://byte-atlas.blogspot.com
+
+博客： http://byte-atlas.blogspot.com 
 https://pnx-tf.blogspot.com/
 
-**Rolf Rolles**
+### Rolf Rolles
 Twitter: @RolfRolles
+
 仓库： https://github.com/RolfRolles
 
----
-
 博客： http://www.msreverseengineering.com/
+
 培训： https://www.msreverseengineering.com/training/
 
-**Open Analysis**
+### Open Analysis
 网站： https://www.openanalysis.net/
+
 Twitter: @herrcore & @seanmw
+
 Youtube： https://www.youtube.com/channel/UC--DwaiMV-jtO-6EvmKOnqg/videos
 
 ## 结束语
 
-我希望你学到了一些关于如何使用 IDAPython 的知识，或者找到了解决你正在处理的问题的技巧。正如我在本书开头所述，我经常忘记 IDA 的 API 用法。帮助我（以及编写本书）记住 API 的一件事是将我几乎所有的 IDAPython 片段剪切并粘贴到 GitHub 的 Gist<sup>20</sup> 中。你会惊讶地发现，一旦你知道它们有多强大，你就可以一遍又一遍地编写相同的功能。让它们快速访问可以节省大量时间。
+我希望你学到了一些关于如何使用 IDAPython 的知识，或者找到了解决你正在处理的问题的技巧。正如我在本书开头所述，我经常忘记 IDA 的 API 用法。帮助我（以及编写本书）记住 API 的一件事是将我几乎所有的 IDAPython 片段剪切并粘贴到 GitHub 的 [Gist](https://gist.github.com/alexander-hanel) 中。你会惊讶地发现，一旦你知道它们有多强大，你就可以一遍又一遍地编写相同的功能。让它们快速访问可以节省大量时间。
 
 如果您有任何问题、评论或反馈，请给我发送电子邮件。我计划继续编辑这本书。请注意版本号，并在将来再次查看。干杯。
 
@@ -3183,7 +2963,7 @@ Youtube： https://www.youtube.com/channel/UC--DwaiMV-jtO-6EvmKOnqg/videos
 - 调试器…
 - 重新实现 Pintools
 
-当前章节或问题的列表可以在 GitHub<sup>21</sup> 上找到。我还将在未来几个月内创建一个视频培训系列。更多细节将在未来版本中发布。
+当前章节或问题的列表可以在 [GitHub](https://github.com/alexander-hanel/BeginnersGuideToIDAPython/issues) 上找到。我还将在未来几个月内创建一个视频培训系列。更多细节将在未来版本中发布。
 
 ## 附录
 
@@ -3197,11 +2977,6 @@ GetDisasm
 SetPrcsr
 GetFloat
 GetDouble
-```
-
-## _(注意：以下列表直接从 OCR 复制，可能不完全)_
-
-```
 AutoMark
 is_pack_real
 set_local_type
@@ -3238,68 +3013,33 @@ DelUserInfo
 Pefile 是一个用于解析可移植可执行文件的多平台 Python 模块。它由 Ero Carrera 编写和维护。以下 Python 代码包含 pefile 的一些最常见用法和输出。有关更多信息，请参阅 pefile GitHub 仓库。
 
 ```python
-"""
- 作者：Alexander Hanel
- 摘要：最常见的 pefile 使用示例
-"""
-import pefile # 确保导入
+import pefile
 import sys
 import datetime
-import zlib # 确保导入
+import zlib
 
+"""
+Author: Alexander Hanel
+Summary: Most common pefile usage examples
+"""
 def pefile_example(_file, file_path=True):
     try:
-        pe = None # 初始化 pe
         if file_path:
-            # 从文件路径加载可执行文件以创建 PE 类
-            print(f"加载文件: {_file}")
+            # load executable from file path to create PE class
             pe = pefile.PE(_file)
         else:
-            # 从缓冲区/字符串加载可执行文件以创建 PE 类
-            print(f"从数据加载...")
+            # load executable from buffer/string to create PE class
             pe = pefile.PE(data=_file)
-
-    # except pefile.PEFormatError as e: # 更具体的异常
-    #    print(f"pefile 加载错误: {e}")
-    #    return
     except Exception as e:
-        print(f"pefile 加载错误: {e}")
+        print("pefile load error: %s" % e)
         return
-
-    # 检查 OPTIONAL_HEADER 是否存在
-    if not hasattr(pe, 'OPTIONAL_HEADER'):
-        print("错误：缺少可选头")
-        return
-
-    # 打印可选头信息
-    print("IMAGE_OPTIONAL_HEADER.AddressOfEntryPoint=0x%x" %
-          pe.OPTIONAL_HEADER.AddressOfEntryPoint)
-    print("IMAGE_OPTIONAL_HEADER.ImageBase=0x%x" % pe.OPTIONAL_HEADER.ImageBase)
-
-    # 现在使用 AddressOfEntryPoint 获取首选的入口点虚拟地址
-    preferred_entry_point = pe.OPTIONAL_HEADER.ImageBase + pe.OPTIONAL_HEADER.AddressOfEntryPoint
-    print("RVA (首选) 入口点=0x%x" % preferred_entry_point)
-
-    # 检查 FILE_HEADER 是否存在
-    if not hasattr(pe, 'FILE_HEADER'):
-         print("错误：缺少文件头")
-         # 可以选择在这里返回或继续处理其他部分
-    else:
-        # 打印文件头信息
-        # 确保 MACHINE_TYPE 字典包含 pe.FILE_HEADER.Machine 的键
-        machine_type_str = pefile.MACHINE_TYPE.get(pe.FILE_HEADER.Machine, "未知")
-        print("CPU 类型=%s" % machine_type_str)
-        # 确保 SUBSYSTEM_TYPE 字典包含 pe.OPTIONAL_HEADER.Subsystem 的键
-        subsystem_str = pefile.SUBSYSTEM_TYPE.get(pe.OPTIONAL_HEADER.Subsystem, "未知")
-        print("子系统=%s" % subsystem_str)
-        # 打印编译时间戳
-        compile_time = datetime.datetime.fromtimestamp(pe.FILE_HEADER.TimeDateStamp)
-        print("编译时间=%s" % compile_time)
-        # 打印节区数量
-        print("节区数量=%s" % pe.FILE_HEADER.NumberOfSections)
-
-
-    # 确定文件类型 (DLL, SYS, EXE)
+    print("IMAGE_OPTIONAL_HEADER32.AddressOfEntryPoint=0x%x" % pe.OPTIONAL_HEADER.AddressOfEntryPoint)
+    print("IMAGE_OPTIONAL_HEADER32.ImageBase=0x%x" % pe.OPTIONAL_HEADER.ImageBase)
+    # Now use AddressOfEntryPoint to get the preferred Virtual Address of Entry Point
+    print("RVA (preferred) Entry Point=0x%x" % (pe.OPTIONAL_HEADER.ImageBase + pe.OPTIONAL_HEADER.AddressOfEntryPoint))
+    print("CPU TYPE=%s" % pefile.MACHINE_TYPE[pe.FILE_HEADER.Machine])
+    print("Subsystem=%s" % pefile.SUBSYSTEM_TYPE[pe.OPTIONAL_HEADER.Subsystem])
+    print("Compile Time=%s" % datetime.datetime.fromtimestamp(pe.FILE_HEADER.TimeDateStamp))
     ext = ""
     if pe.is_dll():
         ext = ".dll"
@@ -3307,87 +3047,29 @@ def pefile_example(_file, file_path=True):
         ext = '.sys'
     elif pe.is_exe():
         ext = '.exe'
-
     if ext:
-        print("文件扩展名=%s" % ext)
+        print("FileExt=%s" % ext)
+    # parse sections
+    print("Number of Sections=%s" % pe.FILE_HEADER.NumberOfSections)
+    print("Section VirtualAddress VirtualSize SizeofRawData CRC Hash")
+    for index, section in enumerate(pe.sections):
+        # how to read the section data
+        sec_data = pe.sections[index].get_data()
+        # simple usage
+        crc_hash = zlib.crc32(sec_data) & 0xffffffff
+        print("%s 0x%x 0x%x 0x%x 0x%x" % (section.Name, section.VirtualAddress, section.Misc_VirtualSize, section.SizeOfRawData, crc_hash))
+    print("Imported DLLs")
+    for entry in pe.DIRECTORY_ENTRY_IMPORT:
+        # print dll name
+        print(entry.dll)
+        print("\tImport Address, Name, File Offset")
+        for imp in entry.imports:
+            # calculate virtual address to file offset
+            file_offset = pe.get_offset_from_rva(imp.address -
+            pe.OPTIONAL_HEADER.ImageBase)
+            # print symbol name
+            print("\t0x%x %s 0x%x" % (imp.address, imp.name, file_offset))
 
-    # 解析节区
-    if hasattr(pe, 'sections') and pe.sections: # 检查节区是否存在且不为空
-        print("\n节区名称  虚拟地址  虚拟大小  原始数据大小  CRC 哈希")
-        for section in pe.sections:
-            # 获取节区数据
-            sec_data = section.get_data()
-            # 计算 CRC32 哈希值
-            crc_hash = zlib.crc32(sec_data) & 0xffffffff
-            # 尝试解码节区名称，如果失败则使用原始字节串
-            try:
-                 section_name = section.Name.decode('utf-8').rstrip('\x00')
-            except UnicodeDecodeError:
-                 section_name = str(section.Name) # 保留字节串表示形式
-
-            print("%-8s 0x%-8x 0x%-8x 0x%-12x 0x%x" % (
-                section_name,
-                section.VirtualAddress,
-                section.Misc_VirtualSize, # 或者 section.Misc.VirtualSize，取决于 pefile 版本
-                section.SizeOfRawData,
-                crc_hash))
-    else:
-        print("\n未找到节区。")
-
-
-    # 解析导入表
-    if hasattr(pe, 'DIRECTORY_ENTRY_IMPORT') and pe.DIRECTORY_ENTRY_IMPORT: # 检查导入表是否存在
-        print("\n导入的 DLL:")
-        for entry in pe.DIRECTORY_ENTRY_IMPORT:
-            # 打印 DLL 名称
-            try:
-                 dll_name = entry.dll.decode('utf-8')
-            except AttributeError: # 如果 dll 属性不存在
-                 dll_name = "未知 DLL"
-            except UnicodeDecodeError:
-                 dll_name = str(entry.dll) # 保留字节串
-            print(dll_name)
-
-            # 打印导入函数信息
-            if hasattr(entry, 'imports') and entry.imports:
-                print("\t导入地址  名称        文件偏移量")
-                for imp in entry.imports:
-                    # 计算虚拟地址到文件偏移量
-                    # 注意：get_offset_from_rva 需要 RVA，而不是 VA
-                    # imp.address 通常是 VA。需要减去 ImageBase 得到 RVA。
-                    try:
-                         rva = imp.address - pe.OPTIONAL_HEADER.ImageBase
-                         file_offset = pe.get_offset_from_rva(rva)
-                    except (AttributeError, TypeError, ValueError):
-                         # 如果地址无效或 get_offset_from_rva 失败
-                         file_offset = "N/A"
-
-                    # 打印符号名称
-                    try:
-                         # imp.name 可能为 None 或字节串
-                         imp_name = imp.name.decode('utf-8') if imp.name else "序号导入"
-                    except UnicodeDecodeError:
-                         imp_name = str(imp.name) if imp.name else "序号导入"
-                    except AttributeError:
-                         imp_name = "无效导入"
-
-
-                    # imp.address 可能是 None
-                    imp_addr_str = f"0x{imp.address:x}" if imp.address else "N/A"
-                    file_offset_str = f"0x{file_offset:x}" if isinstance(file_offset, int) else file_offset
-
-                    print(f"\t{imp_addr_str:<10} {imp_name:<10} {file_offset_str}")
-            else:
-                print("\t此 DLL 没有导入项。")
-    else:
-        print("\n未找到导入目录。")
-
-# --- 脚本执行部分 ---
-if __name__ == "__main__":
-    # 确保至少提供一个命令行参数（文件路径）
-    if len(sys.argv) > 1:
-        path = sys.argv[1]
-        pefile_example(path, file_path=True) # 调用示例函数
-    else:
-        print("用法: python script_name.py <path_to_pe_file>")
+path = sys.argv[1]
+pefile_example(path)
 ```
