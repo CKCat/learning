@@ -121,7 +121,8 @@ typedef struct _IMAGE_OPTIONAL_HEADER {
 } IMAGE_OPTIONAL_HEADER32, *PIMAGE_OPTIONAL_HEADER32;
 ```
 
-64 位系统的可选 PE 头结构与 32 位类似， 但略有不同：没有 `BaseOfData，并且ImageBase` 和 `SizeOf{Stack,Heap}{Reserve,Commit}` 是 64 位，而不是 32 位。
+64 位系统的可选 PE 头结构与 32 位类似， 但略有不同：没有 `BaseOfData`，并且 `ImageBase`
+和 `SizeOf{Stack,Heap}{Reserve,Commit}` 是 64 位，而不是 32 位。
 
 ```c
 struct Pe32PlusOptionalHeader {
@@ -198,31 +199,35 @@ typedef struct _IMAGE_DATA_DIRECTORY {
 
 ```c
 typedef struct _IMAGE_SECTION_HEADER {
-    BYTE    Name[IMAGE_SIZEOF_SHORT_NAME]; // ASCII字符串 可自定义 只截取8个字节
-    union {                                // 该节在没有对齐之前的真实尺寸,该值可以不准确
-            DWORD   PhysicalAddress;
-            DWORD   VirtualSize;
-    } Misc;
-    DWORD   VirtualAddress;                // 内存中的偏移地址
-    DWORD   SizeOfRawData;                 // 节在文件中对齐的尺寸
-    DWORD   PointerToRawData;              // 节区在文件中的偏移
-    DWORD   PointerToRelocations;
-    DWORD   PointerToLinenumbers;
-    WORD    NumberOfRelocations;
-    WORD    NumberOfLinenumbers;
-    DWORD   Characteristics;               // 节的属性
+    BYTE Name[IMAGE_SIZEOF_SHORT_NAME]; // 节名称，8字节，可重复，可任意命名
+    union {
+        DWORD PhysicalAddress;          // 没用
+        DWORD VirtualSize;              // 实际占用空间大小，可以参考，但是可以被修改，
+    } Misc;                             // 实际内存空间大小可以参考节的文件大小或下一个节的起始位置
+    DWORD VirtualAddress;               // 节的起始位置（RVA）,在内存中节都是连续的
+    DWORD SizeOfRawData;                // 文件中节数据的总大小，必须满足文件对齐值
+    DWORD PointerToRawData;             // 文件中节的起始位置，节在文件中是连续的
+    DWORD PointerToRelocations;         // 无用
+    DWORD PointerToLinenumbers;         // 无用
+    WORD NumberOfRelocations;           // 无用
+    WORD NumberOfLinenumbers;           // 无用
+    DWORD Characteristics;              // 节属性，w（写）r（读）e（执行）s（分享）对应最高4位，记住最高4位的值就可以了
 } IMAGE_SECTION_HEADER, *PIMAGE_SECTION_HEADER;
 ```
 
+- 如果 `SizeOfRawData` 和 `PointerToRawData` 为 0，则在内存中为未初始化的全局变量。
+- `Characteristics` 的值的宏和 `VirtualProctect` 的宏值是不一样的。
+
 `SizeOfHeaders` 表示所有的头加上节表文件对齐之后的值，对齐的大小参考的就是 `FileAlignment` 成员。
 
+RVA 是指某些内容加载到内存后的存在地址，而不是文件的偏移量。
+
+- FA：文件偏移
+- VA：虚拟地址
+- RVA：相对虚拟地址
+- VA = 模块基地址 + RVA
+
 ## 导入表
-
-导出表(Import Table)和导入表是靠 `IMAGE_DATA_DIRECTORY` 这个结构体数组来寻找的，`IMAGE_DATA_DIRECTORY` 的结构如下：
-
-```c
-
-```
 
 导入表的结构如下：
 
@@ -243,6 +248,14 @@ typedef struct _IMAGE_IMPORT_DESCRIPTOR {
 } IMAGE_IMPORT_DESCRIPTOR;
 typedef IMAGE_IMPORT_DESCRIPTOR UNALIGNED *PIMAGE_IMPORT_DESCRIPTOR;
 ```
+
+可以看到，OriginalFirstThunk 和 FirstThunk 指向的内容分别是 INT 和 IAT ，但实际上 INT 和 IAT 的内容是一样的，所以他们指向的内容是一样的，只是方式不同而已，下图可以完美的解释
+
+![](assets/2025-09-01-09-22-52.png)
+
+但是上图只是 PE 文件加载前的情况，PE 文件一旦运行起来，就会变成下图的情况
+
+![](assets/2025-09-01-09-23-07.png)
 
 我们还需要了解的结构体是 `IMAGE_THUNK_DATA` 和 `IMAGE_IMPORT_BY_NAME` 结构如下：
 
@@ -277,9 +290,11 @@ typedef struct _IMAGE_THUNK_DATA32 {
 typedef IMAGE_THUNK_DATA32 * PIMAGE_THUNK_DATA32;
 ```
 
+其实他们的作用很明显，就是用来寻找当前的模块依赖哪些函数，可以用这几个结构体求到依赖函数的名字。
+
 ## 导出表
 
-导出表(Export Table)一般是 DLL 文件用的比较多，导出表的数据结构如下：
+导出表可以通过索引为 0 的数据目录条目找到，导出表的数据结构如下：
 
 ```c
 typedef struct _IMAGE_EXPORT_DIRECTORY {
@@ -296,6 +311,36 @@ typedef struct _IMAGE_EXPORT_DIRECTORY {
     DWORD   AddressOfNameOrdinals;  // 指针指向导出函数序号表RVA
 } IMAGE_EXPORT_DIRECTORY, *PIMAGE_EXPORT_DIRECTORY;
 ```
+
+AddressOfFunctions 指向函数地址表，该表的索引是序号（相对于 Base ）。每个元素都是一个 RVA：
+
+- 如果 RVA 为 0，则给定的序号未使用。
+- 如果 RVA 指向导出表中的某个位置（根据数据目录条目），则它是一个转发器。RVA 指向一个以 NUL 结尾的字符串，如 "kernelbase.CloseState" ，表示该镜像从 kernelbase.dll 重新导出了符号 CloseState 。
+- 如果 RVA 指向导出表以外的位置，则直接指向代码或数据。
+
+举例来说，如果 Base 为 3，地址表的前两个元素都是 0，那么地址表从序号 3 开始；序号 3 和序号 4 未使用；下一个条目代表序号 5。
+
+AddressOfNames 指向名称指针表，每个元素都是一个 RVA，指向一个以 NUL 结尾的字符串，代表一个符号。该表按 ASCII 值排序，以便进行二进制搜索。
+
+AddressOfNameOrdinals 指向名称序表，由于名称指针表是按名称排序的，因此还需要一个额外的信息源来将名称映射到序号。
+这就是该表 -- 名字指针表中第 3 个条目中的名字与该表中第 3 个条目中的序号相对应。该表中的值相对于 Base 。
+
+如果您知道地址名称，则可查找该地址：
+
+1. 在名称指针表中进行二进制搜索，并记住索引。
+1. 根据步骤 1 中的索引，在名称序数表中查找相对序数。
+1. 在地址表中查找与步骤 2 中的相对序号相对应的索引地址。
+
+如果知道序号，就可以查找地址：
+
+1. 从序数中减去 mOrdinalBase ，得到相对序数。
+1. 在地址表中查找与步骤 1 中的相对序号相对应的索引地址。
+
+如果知道序数，就能找到名称：
+
+1. 从序数中减去 mOrdinalBase ，得到相对序数。
+1. 扫描名称序数表，查找步骤 1 中的相对序数值，并记住索引。
+1. 根据步骤 2 中的索引，在名称指针表中查找名称。
 
 ## 重定位表
 
