@@ -1,112 +1,176 @@
-We’ve briefly covered batch mode [last time](https://hex-rays.com/blog/igor-tip-of-the-week-07-ida-command-line-options-cheatsheet/) but the basic functionality is not always enough so let’s discuss how to customize it.  
-上次我们简单介绍了批处理模式，但基本功能并不总是足够的，所以我们来讨论一下如何自定义它。
 
-### Basic usage 基本用法
+[上次](https://hex-rays.com/blog/igor-tip-of-the-week-07-ida-command-line-options-cheatsheet/)我们简要介绍了批处理模式（batch mode），但基础功能并不总是够用，所以这次我们来讨论如何自定义它。
+### 基本用法
+回顾一下，批处理模式可以用以下命令行调用：
 
-To recap, batch mode can be invoked with this command line:  
-概括地说，批处理模式可以通过此命令行调用：
-
-```
-ida -B -Lida.log &lt;other switches&gt; &lt;filename&gt;
+```bash
+ida -B -Lida.log <other switches> <filename>
 ```
 
-IDA will load the file, wait for the end of analysis, and write the full disassembly to `<filename>.asm`  
-IDA 将加载文件，等待分析结束，并将完整的反汇编写入 `<filename>.asm`
+IDA 会加载文件，等待分析结束，并将完整的反汇编输出到 `<filename>.asm`
 
-### How it works 如何使用
+###工作原理
+实际上，`-B` 是 `-A -Sanalysis.idc` 的简写：
 
-In fact, `-B` is a shorthand for `-A -Sanalysis.idc:`  
-事实上， `-B` 是 `-A -Sanalysis.idc:` 的简称
+- `-A`：启用自动模式（所有提示都用默认选项回答）
+- `-Sanalysis.idc`：在加载文件后运行 `analysis.idc` 脚本
 
--   `-A`: enable autonomous mode (answer all queries with the default choice).  
-    `-A` : 启用自主模式（使用默认选项回答所有查询）。
--   `-Sanalysis.idc:` run the script `analysis.idc` after loading the file.  
-    `-Sanalysis.idc:` 在加载文件后运行脚本 `analysis.idc` 。
+你可以在 IDA 安装目录的 idc 子目录中找到 `analysis.idc`。在 IDA 7.5 中，它的内容如下：
 
-You can find `analysis.idc` in the `idc` subdirectory of IDA install. In IDA 7.5 it looks as follows:  
-您可以在 IDA install 的 `idc` 子目录中找到 `analysis.idc` 。在 IDA 7.5 中，它看起来如下：
-
-```
+```c
 static main()
 {
-// turn on coagulation of data in the final pass of analysis
-set_inf_attr(INF_AF, get_inf_attr(INF_AF) | AF_DODATA | AF_FINAL);
-// .. and plan the entire address space for the final pass
-auto_mark_range(0, BADADDR, AU_FINAL);
-msg("Waiting for the end of the auto analysis...\n");
-auto_wait();
-msg("\n\n------ Creating the output file.... --------\n");
-auto file = get_idb_path()[0:-4] + ".asm";
-auto fhandle = fopen(file, "w");
-gen_file(OFILE_ASM, fhandle, 0, BADADDR, 0); // create the assembler
-file
-msg("All done, exiting...\n");
-qexit(0); // exit to OS, error code 0 - success
+	// turn on coagulation of data in the final pass of analysis
+	set_inf_attr(INF_AF, get_inf_attr(INF_AF) | AF_DODATA | AF_FINAL);
+	// .. and plan the entire address space for the final pass
+	auto_mark_range(0, BADADDR, AU_FINAL);
+	msg("Waiting for the end of the auto analysis...\n");
+	auto_wait();
+	msg("\n\n------ Creating the output file.... --------\n");
+	auto file = get_idb_path()[0:-4] + ".asm";
+	auto fhandle = fopen(file, "w");
+	gen_file(OFILE_ASM, fhandle, 0, BADADDR, 0); // create the assembler
+	file
+	msg("All done, exiting...\n");
+	qexit(0); // exit to OS, error code 0 - success
 }
 ```
 
-Thus, to modify the behavior of the batch mode you can:  
-因此，你可以修改批处理模式的行为：
+因此，要修改批处理模式的行为，你可以：
 
--   Either modify the standard `analysis.idc`  
-    要么修改标准 `analysis.idc`
--   Or specify a different script using `-S<myscript.idc>`  
-    或使用 `-S<myscript.idc>` 指定不同的脚本
+- 修改标准的 `analysis.idc`
+- 或使用 `-S<myscript.idc>` 指定其他脚本
 
-For example, to output an LST file (it includes address prefixes), change the [gen_file](https://hex-rays.com/products/ida/support/idadoc/244.shtml) call:  
-例如，要输出 LST 文件（其中包括地址前缀），请修改 gen_file 调用：
-
-```
+例如，要输出带地址前缀的 `.LST` 文件，可以修改 `gen_file` 调用为：
+```c
 gen_file(OFILE_LST, fhandle, 0, BADADDR, 0);
 ```
 
-### Batch decompilation 批量反编译
+### 批量反编译
 
 If you have the [decompiler](https://hex-rays.com/products/decompiler/) for the target file’s architecture, you can also run it in [batch mode](https://hex-rays.com/products/decompiler/manual/batch.shtml).  
 如果你有目标文件架构的反编译器，也可以在批处理模式下运行。
 
-For example, to decompile the whole file:  
+如果你有目标文件架构对应的[反编译器](https://hex-rays.com/products/decompiler)，也可以在[批处理模式](https://hex-rays.com/products/decompiler/manual/batch.shtml)下运行它。
+
 例如，反编译整个文件：
 
-```
-ida -Ohexrays:outfile.c:ALL -A &lt;filename&gt;
-```
-
-To decompile only the function `main`:  
-只反编译 `main` 函数：
-
-```
-ida -Ohexrays:outfile.c:main -A &lt;filename&gt;
+```bash
+ida -Ohexrays:outfile.c:ALL -A <filename>
 ```
 
-This uses the functionality built-in into the decompiler plugin which works similarly to the `analysis.idc` script (wait for the end of autoanalysis, then decompile the specified functions to `outfile.c`).  
-这将使用反编译器插件内置的功能，其工作原理与 `analysis.idc` 脚本类似（等待自动分析结束，然后将指定函数反编译为 `outfile.c` ）。
+仅反编译 `main` 函数：
 
-### Customizing batch decompilation  
-自定义批量反编译
-
-If the default functionality is not enough, you could write a plugin to drive the decompiler via its [C++ API](https://hex-rays.com/products/decompiler/sdk/). However, for scripting it’s probably more convenient to use Python. Similarly to IDC, Python scripts can be used with the `-S` switch to be run automatically after the file is loaded.  
-如果默认功能不够，可以编写一个插件，通过 C++ API 驱动反编译器。不过，要编写脚本，使用 Python 可能更方便。与 IDC 类似，Python 脚本也可以使用 `-S` 开关，在加载文件后自动运行。
-
-A sample script is attached to this post. Use it as follows:  
-本帖附有一个示例脚本。使用方法如下：
-
-```
-ida -A -Sdecompile_entry_points.py -Llogfile.txt &lt;filename&gt;
+```bash
+ida -Ohexrays:outfile.c:main -A <filename>
 ```
 
-### Speeding up batch processing  
-加快批处理
+这利用了反编译器插件内置的功能，工作方式与 `analysis.idc` 类似（等待自动分析结束，然后将指定函数反编译到 `outfile.c`）。
 
-In the examples so far we’ve been using the `ida` executable which is the full GUI version of IDA. Even though the UI is not actually displayed in batch mode, it still has to load and initialize all the dependent UI libraries which can take non-negligible time. This is why it is often better to use the text-mode executable (`idat`) which uses lightweight text-mode UI. However, it still needs a terminal even in batch mode. In case you need to run it in a situation without a terminal (_e.g._ run it in background or from a daemon), you can use the following approach:  
-在迄今为止的示例中，我们一直在使用 `ida` 可执行文件，它是 IDA 的完整图形用户界面版本。尽管在批处理模式下用户界面实际上并不显示，但它仍然需要加载和初始化所有依赖的用户界面库，这可能会花费不可忽略的时间。这就是为什么使用文本模式可执行文件（ `idat` ）通常更好，因为它使用轻量级文本模式用户界面。不过，即使在批处理模式下，它仍然需要终端。如果需要在没有终端的情况下运行（例如在后台运行或从守护进程运行），可以使用以下方法：
+### 自定义批量反编译
+如果默认功能不够用，可以编写插件通过 [C++ API](https://hex-rays.com/products/decompiler/sdk/) 控制反编译器。不过，对于脚本化任务，使用 Python 更方便。
 
-1.  set environment variable `TVHEADLESS=1`  
-    设置环境变量 `TVHEADLESS=1`
-2.  redirect output 重定向输出
+与 IDC 类似，Python 脚本也可以通过 `-S` 开关在文件加载后自动运行。本篇附带了一个示例脚本 `decompile_entry_points.py`，用法如下：
 
-For example: 例如
-
+```bash
+ida -A -Sdecompile_entry_points.py -Llogfile.txt <filename>
 ```
-TVHEADLESS=1 idat -A -Smyscript.idc file.bin &gt;/dev/null &amp;
+
+### 加速批处理
+前面的示例中，我们一直使用的是带完整 GUI 的 ida 可执行文件。即使在批处理模式下 UI 不会显示，它仍需加载和初始化所有依赖的 UI 库，这会耗费一定时间。
+
+因此，通常更好用轻量级文本模式 UI 的 `idat` 可执行文件。不过，即使在批处理模式下，`idat` 仍需要终端。
+
+如果需要在没有终端的情况下运行（例如后台或守护进程中），可以这样做：
+
+设置环境变量：
+
+1.  设置环境变量 `TVHEADLESS=1`
+2.  重定向输出
+
+例如:
 ```
+TVHEADLESS=1 idat -A -Smyscript.idc file.bin >/dev/null &
+```
+
+`decompile_entry_points.py` 文件内容：
+```python
+from __future__ import print_function
+
+#
+# This example tries to load a decompiler plugin corresponding to the current
+# architecture (and address size) right after auto-analysis is performed,
+# and then tries to decompile the function at the first entrypoint.
+#
+# It is particularly suited for use with the '-S' flag, for example:
+# idat -Ldecompile.log -Sdecompile_entry_points.py -c file
+#
+
+import ida_ida
+import ida_auto
+import ida_loader
+import ida_hexrays
+import ida_idp
+import ida_entry
+
+# becsause the -S script runs very early, we need to load the decompiler
+# manually if we want to use it
+def init_hexrays():
+    ALL_DECOMPILERS = {
+        ida_idp.PLFM_386: "hexrays",
+        ida_idp.PLFM_ARM: "hexarm",
+        ida_idp.PLFM_PPC: "hexppc",
+        ida_idp.PLFM_MIPS: "hexmips",
+    }
+    cpu = ida_idp.ph.id
+    decompiler = ALL_DECOMPILERS.get(cpu, None)
+    if not decompiler:
+        print("No known decompilers for architecture with ID: %d" % ida_idp.ph.id)
+        return False
+    if ida_ida.inf_is_64bit():
+        if cpu == ida_idp.PLFM_386:
+            decompiler = "hexx64"
+        else:
+            decompiler += "64"
+    if ida_loader.load_plugin(decompiler) and ida_hexrays.init_hexrays_plugin():
+        return True
+    else:
+        print('Couldn\'t load or initialize decompiler: "%s"' % decompiler)
+        return False
+
+
+def decompile_func(ea, outfile):
+    print("Decompiling at: %X..." % ea)
+    cf = ida_hexrays.decompile(ea)
+    if cf:
+        print("OK.")
+        outfile.write(str(cf) + "\n")
+    else:
+        print("failed!")
+        outfile.write("decompilation failure at %X!\n" % ea)
+
+
+def main():
+    print("Waiting for autoanalysis...")
+    ida_auto.auto_wait()
+    if init_hexrays():
+        eqty = ida_entry.get_entry_qty()
+        if eqty:
+            idbpath = idc.get_idb_path()
+            cpath = idbpath[:-4] + ".c"
+            with open(cpath, "w") as outfile:
+                print("writing results to '%s'..." % cpath)
+                for i in range(eqty):
+                    ea = ida_entry.get_entry(ida_entry.get_entry_ordinal(i))
+                    decompile_func(ea, outfile)
+        else:
+            print("No known entrypoint. Cannot decompile.")
+    if idaapi.cvar.batch:
+        print("All done, exiting.")
+        ida_pro.qexit(0)
+
+
+main()
+```
+
+原文地址：https://hex-rays.com/blog/igor-tip-of-the-week-08-batch-mode-under-the-hood

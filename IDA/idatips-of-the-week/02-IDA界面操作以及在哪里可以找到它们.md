@@ -1,25 +1,32 @@
-In the previous post we described how to quickly invoke some of IDA’s commands using the keyboard. However, sometimes you may need to perform a specific action many times and if it doesn’t have a default hotkey assigned it can be tedious to click through the menus. Even the accelerator keys help only so much. Or it may be difficult to discover or find a specific action in the first place (some actions do not even have menu items). There are **two IDA features** that would help here:  
-在上一篇文章中，我们介绍了如何使用键盘快速调用 IDA 的某些命令。不过，有时你可能需要多次执行某个特定操作，如果没有指定默认热键，点击菜单就会很乏味。即使是加速键也只能提供这么多帮助。或者很难发现或找到某个特定的操作（有些操作甚至没有菜单项）。在这方面，有**两个 IDA 功能**可以提供帮助：
+在上一篇文章中，我们介绍了如何使用键盘快速调用 IDA 的一些命令。然而，有时你可能需要多次执行某个特定操作，如果它没有默认的快捷键，就会很麻烦，需要不断地通过菜单点击。即使有加速键（accelerator keys）也只能帮上一点忙。另外，有些操作甚至没有菜单项，第一次找到它们就很困难。
 
-### The shortcut editor  快捷键编辑器
+这里有两个 IDA 功能可以帮到你：
 
-The editor is invoked via `Options > Shortcuts…` and allows you to see, add, and modify shortcuts for almost all UI actions available in IDA.  
-通过 `Options > Shortcuts…` 调用该编辑器，可以查看、添加和修改 IDA 中几乎所有用户界面操作的快捷方式。
+### 快捷键编辑器（Shortcut Editor）
+
+通过 `Options > Shortcuts…` 打开快捷键编辑器，你可以查看、添加和修改几乎所有 IDA 界面动作的快捷键。
 
 ![shortcut editor](assets/2020/08/shotcut_editor.png)
 
-The dialog is non-modal and shows which actions are available for the current view (currently disabled ones are struck out) so you can try clicking around IDA and see how the set of available actions changes depending on the context.  
-该对话框是非模式对话框，显示的是当前视图中可用的操作（当前禁用的操作会被删除），因此您可以尝试在 IDA 周围点击，看看可用操作集是如何根据上下文发生变化的。
+该对话框是非模态的，并会显示当前视图可用的动作（当前不可用的会被划掉）。你可以在 IDA 中点击不同位置，观察可用动作列表如何随上下文变化。
 
-To assign a shortcut, select the action in the list then type the key combination in the “Shortcut:” field (on Windows you can also click the “Record” button and press the desired shortcut), then click “Set” to save the new shortcut for this and all future IDA sessions. Use “Restore” to restore just this action, or “Reset” to reset all actions to the default state (as described in `idagui.cfg`).  
-要指定快捷方式，请在列表中选择操作，然后在 `Shortcut:` 字段中键入组合键（在 Windows 上也可以单击 `Record` 按钮并按下所需的快捷键），然后单击 `Set` 以保存新的快捷方式，供本次和以后的所有 IDA 会话使用。使用 `Restore` 只还原此操作，或使用 `Reset` 将所有操作重置为默认状态（如 `idagui.cfg` 中所述）。
+**分配快捷键的方法：**
 
-### The command palette  命令调板
+- 在列表中选择一个动作。
+- 在 `Shortcut:` 输入框中输入组合键（Windows 下也可以点击 `Record` 按钮，然后按下想要的快捷键）。
+- 点击 `Set` 保存新快捷键，它会在当前和未来的 IDA 会话中生效。
 
-Command palette (default shortcut is `Ctrl–Shift–P`) is similar to the Shortcut editor in that it shows the list of all IDA actions but instead of changing shortcuts you can simply _invoke_ the action.  
-命令调板（默认快捷键为 `Ctrl–Shift–P`）与快捷键编辑器类似，显示所有 IDA 操作的列表，但无需更改快捷键，只需调用操作即可。
+**恢复与重置：**
+
+- `Restore` 仅恢复当前动作的默认快捷键。
+- `Reset` 会将所有动作恢复到默认状态（默认配置在 `idagui.cfg` 中）。
+
+### 命令面板（Command Palette）
+
+命令面板（默认快捷键 `Ctrl–Shift–P`）与快捷键编辑器类似，也会显示所有 IDA 动作的列表，但它不是用来修改快捷键，而是直接执行动作。
 
 ![palette jump](assets/2020/08/palette_jump.png)
 
-The filter box at the bottom filters the actions that contain the typed text with fuzzy matching and is focused when the palette is opened so you can just type the approximate name of an action and press `Enter` to invoke the best match.  
-底部的过滤框会过滤包含模糊匹配输入文本的操作，并在打开调板时聚焦，因此你只需键入操作的大致名称并按下 `Enter` 即可调用最佳匹配的操作。
+底部的过滤框会使用模糊匹配（fuzzy matching）过滤包含输入文本的动作，并在面板打开时自动获得焦点。你只需输入动作的大致名称，然后按 `Enter` 即可执行最佳匹配的动作。
+
+原文地址：https://hex-rays.com/blog/igor-tip-of-the-week-02-ida-ui-actions-and-where-to-find-them
