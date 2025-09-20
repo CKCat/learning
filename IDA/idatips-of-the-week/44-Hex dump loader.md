@@ -1,8 +1,6 @@
-IDA has a file loader named ‘hex’ which mainly supports loading of text-based file formats such as [Intel Hex](https://en.wikipedia.org/wiki/Intel_HEX) or [Motorola S-Record](https://en.wikipedia.org/wiki/SREC_(file_format)). These formats contain records with addresses and data in hexadecimal encoding.  
-IDA 有一个名为 "hex "的文件加载器，主要支持加载基于文本的文件格式，如英特尔 Hex 或摩托罗拉 S-Record。这些格式包含十六进制编码的地址和数据记录。
+IDA 有一个名为 hex 的文件加载器，主要用于加载基于文本的文件格式，例如 Intel Hex 或 Motorola S-Record。 这些格式包含带有地址和数据的记录，数据以十六进制编码。
 
-For example, here’s a fragment of an Intel Hex file:  
-例如，下面是一个英特尔十六进制文件的片段：
+例如，下面是一个 Intel Hex 文件的片段：
 
 ```
 :18000000008F9603008FD801008FDC01008FE001008FE401008FE80190
@@ -14,7 +12,7 @@ For example, here’s a fragment of an Intel Hex file:
 :20012000627261727920436F707972696768742028432920313939352048492D5445434818
 ```
 
-or an S-Record 或 S 记录
+或者一个 S-Record 文件：
 
 ```
 S0030000FC
@@ -24,21 +22,17 @@ S12301109800E00182A09E0B8000C2012A38001608000000EA3100163A380016FA310016CA
 S1230118FF250016BE21001600000000182200169A0100169C330016F9C010010D000000D7
 ```
 
-However, you may also have a simple unformatted hex dump, with or without addresses:  
-不过，你也可能有一个简单的未格式化的十六进制转储文件，有地址或无地址：
+然而，你也可能会遇到一些简单的、未格式化的十六进制转储文件，可能带有或不带有地址，例如：
 
 ```
 0020: 59 69 74 54 55 B6 3E F7 D6 B9 C9 B9 45 E6 A4 52
 1000: 12 23 34 56 78
-0100: 31 C7 1D AF 32 04 1E 32 05 1E 3C 32 07 1E 21 D9
-12 23 34 56 78
+0100: 31 C7 1D AF 32 04 1E 32 05 1E 3C 32 07 1E 21 D9 12 23 34 56 78
 ```
 
-Such files are recognized and handled by another loader called ‘dump’. Since, like raw binaries, they do not carry information about the processor used, it has to be selected by the user.  
-此类文件由另一个名为 "dump "的加载器识别和处理。与原始二进制文件一样，它们不包含所用处理器的信息，因此必须由用户选择。
+这类文件会由另一个名为 `dump` 的加载器识别和处理。 由于它们和原始二进制文件一样，不包含所用处理器的信息，因此需要用户手动选择处理器。
 
-For example, a hex dump of some MIPS code:  
-例如，一些 MIPS 代码的十六进制转储文件：
+例如，下面是一些 MIPS 代码的十六进制转储：
 
 ```
 007C5DBC 27 BD FF D0
@@ -55,12 +49,12 @@ For example, a hex dump of some MIPS code:
 007C5DE8 27 BD 00 30
 ```
 
-can be loaded into IDA without having to convert it to binary or a structured format like ELF.  
-可以加载到 IDA 中，而无需将其转换为二进制或类似 ELF 的结构化格式。
+这些数据可以直接加载到 IDA 中，而无需先转换成二进制文件或 ELF 等结构化格式。
 
 ![](assets/2021/06/hexldr.png)
 
 ![](assets/2021/06/hexldr_ida.png)
 
-This feature could be useful when working with shellcode or exchanging data with other software. As we described before, IDA also supports [exporting data from database](https://hex-rays.com/blog/igors-tip-of-the-week-39-export-data/) as hexadecimal dump.  
-这一功能在处理 shellcode 或与其他软件交换数据时非常有用。如前所述，IDA 还支持以十六进制转储形式从数据库导出数据。
+这个功能在处理 shellcode 或与其他软件交换数据时非常有用。 正如我们之前介绍过的，IDA 还支持将数据库中的数据导出为十六进制转储。
+
+原文地址：https://hex-rays.com/blog/igors-tip-of-the-week-44-hex-dump-loader

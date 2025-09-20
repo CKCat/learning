@@ -66,3 +66,5 @@ The way hints work can be configured via Options > General…, Browser tab. You 
 
 See also: [Browser options](https://hex-rays.com/products/ida/support/idadoc/1304.shtml)  
 另请参见：浏览器选项
+
+原文地址：
