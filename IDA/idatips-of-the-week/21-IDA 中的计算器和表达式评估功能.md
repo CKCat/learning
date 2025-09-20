@@ -1,25 +1,42 @@
-When reverse-engineering, sometimes you need to perform some simple calculations. While you can always use an external calculator program, IDA has a built-in one. You can invoke it by pressing ? or via View > Calculator.  
-在逆向工程中，有时您需要执行一些简单的计算。虽然你可以随时使用外部计算器程序，但 IDA 有一个内置计算器。您可以按 ? 或通过 "视图">"计算器 "调用它。
+在逆向工程时，你经常需要做一些简单的计算。虽然可以使用外部计算器，但 IDA 内置了一个计算器：
 
-The calculator shows the result in hex, decimal, octal, binary and as a character constant. This information is also duplicated in the Output window in case you need to copy it to somewhere else.  
-计算器以十六进制、十进制、八进制、二进制和字符常数显示结果。这些信息也会复制到 "输出 "窗口，以备复制到其他地方。
+- 调出方式：按下 `?` 键，或通过菜单 `View > Calculator`。
+- 计算结果会同时显示为 十六进制、十进制、八进制、二进制 以及 字符常量。
+- 这些结果也会复制到 Output 窗口，方便粘贴到其他地方。
 
 ![](assets/2021/01/calc_simple.png)
 
-In addition to plain numbers, you can use names from the database, as well as register values during debugging similarly to the “Jump to address” dialog from [the previous tip](https://www.hex-rays.com/blog/igors-tip-of-the-week-20-going-places/).  
-除纯数字外，在调试过程中还可以使用数据库中的名称和寄存器值，与上一条提示中的 "跳转到地址 "对话框类似。
+### 支持的输入
 
-By the way, the number, address, or identifier under cursor is picked up automatically when you press ? so there’s no need to copy or type it manually.  
-顺便说一句，当你按下 ? 时，光标下的数字、地址或标识符会被自动拾取，因此无需手动复制或输入。
+不仅可以输入普通数字，还能使用 数据库中的符号名，以及在调试时的 寄存器值。
 
-In fact, the expression evaluation feature is provided by the [IDC language](https://www.hex-rays.com/products/ida/support/idadoc/157.shtml) interpreter built-in into IDA. You can use expressions in almost any place in IDA that accepts numbers: Jump to address, Make array, User-defined offset and so on.  
-事实上，表达式评估功能是由 IDA 内置的 IDC 语言解释器提供的。您可以在 IDA 中几乎所有接受数字的地方使用表达式：跳转到地址、制作数组、用户定义偏移量等。
+类似于前一篇技巧中提到的 “[跳转到地址](https://www.hex-rays.com/blog/igors-tip-of-the-week-20-going-places/)” 对话框。
+
+小贴士：当你按下 `?` 时，光标下的数字、地址或标识符会被自动填入计算器，无需手动复制。
+
+### 表达式求值
+
+计算器功能实际上由 IDA 内置的 IDC 语言解释器 提供。
+
+因此，你几乎可以在 IDA 中任何接受数字的地方使用表达式：
+
+- `Jump to address`（跳转到地址）
+- `Make array`（创建数组）
+- `User-defined offset`（用户自定义偏移）
+- 等等。
+
+你还可以调用任何可用的 IDC 函数。
 
 ![](assets/2021/01/calc_useroff.png)
 
-You can also use any of the available [IDC functions](https://www.hex-rays.com/products/ida/support/idadoc/162.shtml). For example, expressions like the following are possible during debugging:  
-您还可以使用任何可用的 IDC 函数。例如，在调试过程中可以使用以下表达式：
+在调试时，可以写出类似这样的表达式：
 
-```
+```c
 get_qword(__security_cookie)^RSP
 ```
+
+这会取出全局变量 `__security_cookie` 的值，并与当前栈指针 `RSP` 做异或运算。
+
+👉 总结：IDA 的计算器不仅是一个多进制转换工具，更是一个强大的 表达式求值引擎。它能结合符号、寄存器和 IDC 函数，大幅提升逆向分析时的效率。
+
+原文地址：https://hex-rays.com/blog/igors-tip-of-the-week-21-calculator-and-expression-evaluation-feature-in-ida
