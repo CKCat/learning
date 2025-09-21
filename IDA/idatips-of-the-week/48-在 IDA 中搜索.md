@@ -118,3 +118,6 @@ This is not a definitive guide but here are some suggestions:
 
 More info: [Search submenu](https://hex-rays.com/products/ida/support/idadoc/568.shtml)  
 更多信息：搜索子菜单
+
+
+原文地址：
